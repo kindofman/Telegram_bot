@@ -38,12 +38,17 @@ class Form(StatesGroup):
     start = State()
     nickname = State()  # Will be represented in storage as 'Form:nickname'
     unregister = State()
+    info = State()
     test = State()
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 base_markup.add("Правила")
 base_markup.add("Регистрация")
 base_markup.add("Инфо")
+
+info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+info_markup.add("Информация по игре")
+info_markup.add("Жесты")
 
 # You can use state '*' if you need to handle all states
 @dp.message_handler(state='*', commands='reset')
@@ -141,11 +146,12 @@ async def process_name(message: types.Message, state: FSMContext):
     # await state.finish()
     # await Form.next()
 
-# @dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
-# async def get_next_game_info(message: types.Message, state: FSMContext):
-#     await message.reply(f"Отлично, {message.text}! Регистрация прошла успешно.", reply_markup=???)
-
 @dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
+async def get_next_game_info(message: types.Message, state: FSMContext):
+    await message.reply(".", reply_markup=info_markup)
+    await Form.info.set()
+
+@dp.message_handler(lambda message: message.text == "Информация по игре", state=Form.info)
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("participants.pkl", 'rb') as file:
         participants = pickle.load(file)
@@ -155,7 +161,13 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
         participants_wrapped.append(f"{num}. {nickname}")
     participants_wrapped = "\n".join(participants_wrapped)
     empty_places = f"\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
-    await message.reply(game_info + participants_wrapped + empty_places)
+    await message.reply(game_info + participants_wrapped + empty_places, reply_markup=base_markup)
+    await Form.start.set()
+
+@dp.message_handler(lambda message: message.text == "Жесты", state=Form.info)
+async def get_next_game_info(message: types.Message, state: FSMContext):
+    await message.reply_photo(open("gestures.png", 'rb'), reply_markup=base_markup)
+    await Form.start.set()
 
 @dp.message_handler(lambda message: message.text == "Правила", state=Form.start)
 async def get_rules(message: types.Message, state:FSMContext):
