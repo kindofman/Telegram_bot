@@ -148,7 +148,7 @@ async def process_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
 async def get_next_game_info(message: types.Message, state: FSMContext):
-    await message.reply(".", reply_markup=info_markup)
+    await message.reply("Что вы хотите узнать?", reply_markup=info_markup)
     await Form.info.set()
 
 @dp.message_handler(lambda message: message.text == "Информация по игре", state=Form.info)
