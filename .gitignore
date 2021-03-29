@@ -2,3 +2,5 @@
 *.pkl
 __pycache__/
 participants.txt
+server_info
+*.db
