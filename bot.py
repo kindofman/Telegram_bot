@@ -72,7 +72,7 @@ async def cmd_start(message: types.Message):
     # Configure ReplyKeyboardMarkup
 
     await Form.start.set()
-    await message.reply("Привет! Круто, что ты здесь! Что тебя интересует?", reply_markup=base_markup)
+    await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
 @dp.message_handler(lambda message: message.text not in ["Регистрация", "Правила", "Инфо"], state=Form.start)
 async def process_start_invalid(message: types.Message):
@@ -117,7 +117,7 @@ async def unregister(message: types.Message, state: FSMContext):
 
     with open("participants.pkl", 'wb') as output:
         pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
-    await message.reply(f"Снятие с регистрации прошло успешно.\nБез вас будет скучно, {nick}! :(", reply_markup=base_markup)
+    await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
     await Form.start.set()
 
 @dp.message_handler(lambda message: message.text == "Нет", state=Form.unregister)
@@ -148,7 +148,7 @@ async def process_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
 async def get_next_game_info(message: types.Message, state: FSMContext):
-    await message.reply("Что вы хотите узнать?", reply_markup=info_markup)
+    await message.reply("Что Вы хотите узнать?", reply_markup=info_markup)
     await Form.info.set()
 
 @dp.message_handler(lambda message: message.text == "Информация по игре", state=Form.info)
