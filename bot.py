@@ -9,11 +9,17 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ParseMode
 from aiogram.utils import executor
+
 import pickle
+import argparse
+
+parser = argparse.ArgumentParser(description='Mafia bot')
+parser.add_argument("purpose", help="Mode", default="test", choices={"test", "prod"}, nargs="?")
+args = parser.parse_args()
+
+API_TOKEN = config.API_TOKEN_TEST if args.purpose == "test" else config.API_TOKEN_PROD
 
 logging.basicConfig(level=logging.INFO)
-
-API_TOKEN = config.API_TOKEN
 
 
 bot = Bot(token=API_TOKEN)
