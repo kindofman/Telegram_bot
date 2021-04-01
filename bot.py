@@ -48,34 +48,27 @@ class Form(StatesGroup):
     test = State()
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-base_markup.add("Правила")
 base_markup.add("Регистрация")
 base_markup.add("Инфо")
 
 info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 info_markup.add("Информация по игре")
+info_markup.add("Правила")
 info_markup.add("Жесты")
 
 @dp.message_handler(state=None)
 async def cmd_start(message: types.Message):
-    # Configure ReplyKeyboardMarkup
-
     await Form.start.set()
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
 @dp.message_handler(state="*", commands='start')
 async def cmd_start(message: types.Message):
-    # Configure ReplyKeyboardMarkup
-
     await Form.start.set()
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
-@dp.message_handler(lambda message: message.text not in ["Регистрация", "Правила", "Инфо"], state=Form.start)
+@dp.message_handler(lambda message: message.text not in ["Регистрация", "Инфо"], state=Form.start)
 async def process_start_invalid(message: types.Message):
-    """
-    In this example gender has to be one of: Male, Female, Other.
-    """
-    return await message.reply("Нажмите, пожалуйста, на одну из 3-ех кнопок.")
+    return await message.reply("Нажмите, пожалуйста, на одну из 2-х кнопок.", reply_markup=base_markup)
 
 @dp.message_handler(lambda message: message.text == "Регистрация", state=Form.start)
 async def register(message: types.Message):
@@ -89,7 +82,7 @@ async def register(message: types.Message):
     if message.from_user.id in ids:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
         markup.add("Да", "Нет")
-        await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХочется сняться с регистрации?"',
+        await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХотите сняться с регистрации?"',
                             reply_markup=markup)
         await Form.unregister.set()
 
@@ -165,14 +158,15 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     await message.reply_photo(open("gestures.png", 'rb'), reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Правила", state=Form.start)
+@dp.message_handler(lambda message: message.text == "Правила", state=Form.info)
 async def get_rules(message: types.Message, state:FSMContext):
     """
     max length of message is 4096
     """
     with open("rules.txt") as f:
         rules = f.read()
-    await message.reply(rules, parse_mode="Markdown")
+    await message.reply(rules, parse_mode="Markdown", reply_markup=base_markup)
+    await Form.start.set()
 
 @dp.message_handler(state=Form.test)
 async def process_gender(message: types.Message, state: FSMContext):
