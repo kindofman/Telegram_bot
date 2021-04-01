@@ -56,22 +56,12 @@ info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, on
 info_markup.add("Информация по игре")
 info_markup.add("Жесты")
 
-# You can use state '*' if you need to handle all states
-@dp.message_handler(state='*', commands='reset')
-@dp.message_handler(Text(equals='reset', ignore_case=True), state='*')
-async def cancel_handler(message: types.Message, state: FSMContext):
-    """
-    Allow user to cancel any action
-    """
-    current_state = await state.get_state()
-    if current_state is None:
-        return
+@dp.message_handler(state=None)
+async def cmd_start(message: types.Message):
+    # Configure ReplyKeyboardMarkup
 
-    logging.info('Cancelling state %r', current_state)
-    # Cancel state and inform user about it
-    await state.finish()
-    # And remove keyboard (just in case)
-    await message.reply('Бот перезагружен успешно.', reply_markup=types.ReplyKeyboardRemove())
+    await Form.start.set()
+    await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
 @dp.message_handler(state="*", commands='start')
 async def cmd_start(message: types.Message):
