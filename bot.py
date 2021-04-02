@@ -29,15 +29,6 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
 MAX_NUMBER = 14
-game_info = """Игра в среду, 17 марта
-⏳ Время сбора - 18:00, старт стола - 18:30
-🕵🏻‍♂️ 3 игры за вечер
-🧭 Место: Щербаков пер, 12к2, Lounge Bar "111 Metrov"
-💸 Стоимость: 300₽
-
-Зарегистрированные участники
-"""
-
 
 # States
 class Form(StatesGroup):
@@ -45,6 +36,8 @@ class Form(StatesGroup):
     nickname = State()  # Will be represented in storage as 'Form:nickname'
     unregister = State()
     info = State()
+    change_info = State()
+    reset = State()
     test = State()
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
@@ -55,6 +48,45 @@ info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, on
 info_markup.add("Информация по игре")
 info_markup.add("Правила")
 info_markup.add("Жесты")
+
+yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+yes_no_markup.add("Да", "Нет")
+
+
+@dp.message_handler(state="*", commands='newgame', user_id=[436612042, 334756630])
+async def get_game_settings(message: types.Message):
+    with open("game_info.txt") as file:
+        game_info = file.read()
+    await message.reply("Введите, пожалуйста, новую информацию по следующей игре")
+    await message.reply(game_info, reply_markup=types.ReplyKeyboardRemove())
+    await Form.change_info.set()
+
+@dp.message_handler(state=Form.change_info)
+async def change_game_settings(message: types.Message):
+    game_info = message.text
+    with open("game_info.txt", "w") as file:
+        file.write(game_info)
+    await message.reply("Информация по игре успешно перезаписана", reply_markup=base_markup)
+    await Form.start.set()
+
+@dp.message_handler(state="*", commands='reset', user_id=[436612042, 334756630])
+async def reset_registration(message: types.Message):
+    await message.reply("Вы уверены, что хотите обнулить регистрацию?", reply_markup=yes_no_markup)
+    await Form.reset.set()
+
+@dp.message_handler(lambda message: message.text == "Да", state=Form.reset)
+async def reset_registration_for_sure(message: types.Message):
+    with open("ids.pkl", 'wb') as output:
+        pickle.dump(dict(), output, pickle.HIGHEST_PROTOCOL)
+    with open("participants.pkl", 'wb') as output:
+        pickle.dump([], output, pickle.HIGHEST_PROTOCOL)
+    await message.reply("Бот готов для регистрации участников на следующую игру", reply_markup=base_markup)
+    await Form.start.set()
+
+@dp.message_handler(lambda message: message.text == "Нет", state=Form.reset)
+async def cancel_reset_registration(message: types.Message):
+    await Form.start.set()
+    await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
 
 @dp.message_handler(state=None)
 async def cmd_start(message: types.Message):
@@ -80,10 +112,8 @@ async def register(message: types.Message):
         ids = pickle.load(file)
     # Set state
     if message.from_user.id in ids:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-        markup.add("Да", "Нет")
         await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХотите сняться с регистрации?"',
-                            reply_markup=markup)
+                            reply_markup=yes_no_markup)
         await Form.unregister.set()
 
     else:
@@ -142,6 +172,8 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == "Информация по игре", state=Form.info)
 async def get_next_game_info(message: types.Message, state: FSMContext):
+    with open("game_info.txt") as file:
+        game_info = file.read()
     with open("participants.pkl", 'rb') as file:
         participants = pickle.load(file)
     print(message.from_user.id)
@@ -149,6 +181,7 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     for num, nickname in enumerate(participants, 1):
         participants_wrapped.append(f"{num}. {nickname}")
     participants_wrapped = "\n".join(participants_wrapped)
+    participants_wrapped = "\n\nЗарегистрированные участники\n" + participants_wrapped
     empty_places = f"\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
     await message.reply(game_info + participants_wrapped + empty_places, reply_markup=base_markup)
     await Form.start.set()
