@@ -217,7 +217,7 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     await message.reply("Что Вы хотите узнать?", reply_markup=info_markup)
     await Form.info.set()
 
-@dp.message_handler(lambda message: message.text == "Информация по игре", state=Form.info)
+@dp.message_handler(lambda message: message.text == "Ближайшая игра", state=Form.info)
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
