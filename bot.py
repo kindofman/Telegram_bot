@@ -47,7 +47,7 @@ base_markup.add("Регистрация")
 base_markup.add("Инфо")
 
 info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-info_markup.add("Информация по игре")
+info_markup.add("Ближайшая игра")
 info_markup.add("Правила")
 info_markup.add("Жесты")
 
