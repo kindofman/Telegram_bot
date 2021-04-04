@@ -38,6 +38,8 @@ class Form(StatesGroup):
     info = State()
     change_info = State()
     reset = State()
+    register_player = State()
+    unregister_player = State()
     test = State()
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
@@ -51,6 +53,52 @@ info_markup.add("Жесты")
 
 yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 yes_no_markup.add("Да", "Нет")
+
+
+@dp.message_handler(state="*", commands='register', user_id=[436612042, 334756630])
+async def register_player(message: types.Message):
+    await message.reply("Введите никнейм игрока для регистрации", reply_markup=types.ReplyKeyboardRemove())
+    await Form.register_player.set()
+
+@dp.message_handler(state=Form.register_player)
+async def enter_player_nickname(message: types.Message):
+    nick = message.text
+    with open("participants.pkl", 'rb') as file:
+        participants = pickle.load(file)
+    participants.append(nick)
+    with open("participants.pkl", 'wb') as output:
+        pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+
+    await Form.start.set()
+    await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=base_markup)
+
+@dp.message_handler(state="*", commands='unregister', user_id=[436612042, 334756630])
+async def unregister_player_register(message: types.Message):
+    await message.reply("Введите никнейм игрока для снятия с регистрации.", reply_markup=types.ReplyKeyboardRemove())
+    await Form.unregister_player.set()
+
+@dp.message_handler(state=Form.unregister_player)
+async def enter_player_nickname_unregister(message: types.Message):
+    nick = message.text
+    with open("participants.pkl", 'rb') as file:
+        participants = pickle.load(file)
+    with open("ids.pkl", "rb") as file:
+        ids = pickle.load(file)
+
+    try:
+        index = len(participants) - 1 - participants[::-1].index(nick)
+        del participants[index]
+        # Players with same nicknames may be deleted at once
+        ids = {telegram_id: nick_ for telegram_id, nick_ in ids.items() if nick_ != nick}
+        with open("participants.pkl", 'wb') as output:
+            pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+        with open("ids.pkl", 'wb') as output:
+            pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
+        await message.reply(f"""Игрок с никнеймом "{nick}" успешно снят с регистрации.""", reply_markup=base_markup)
+    except ValueError:
+        await message.reply(f"""Игрок с никнеймом "{nick}" не зарегистрирован.""", reply_markup=base_markup)
+
+    await Form.start.set()
 
 
 @dp.message_handler(state="*", commands='newgame', user_id=[436612042, 334756630])
@@ -160,10 +208,9 @@ async def process_name(message: types.Message, state: FSMContext):
     participants.append(message.text)
     with open("participants.pkl", 'wb') as output:
         pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
-    await message.reply(f"Отлично, {message.text}! Регистрация прошла успешно.", reply_markup=base_markup)
+    await message.reply(f"Отлично, {message.text}! Регистрация прошла успешно.\n\nДля регистрации друга обратитесь к @naya_vokhidova",
+                        reply_markup=base_markup)
     await Form.start.set()
-    # await state.finish()
-    # await Form.next()
 
 @dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
 async def get_next_game_info(message: types.Message, state: FSMContext):
