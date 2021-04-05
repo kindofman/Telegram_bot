@@ -158,12 +158,17 @@ async def register(message: types.Message):
 
     with open("ids.pkl", "rb") as file:
         ids = pickle.load(file)
+    with open("participants.pkl", 'rb') as file:
+        participants = pickle.load(file)
     # Set state
     if message.from_user.id in ids:
         await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХотите сняться с регистрации?"',
                             reply_markup=yes_no_markup)
         await Form.unregister.set()
-
+    elif len(participants) >= MAX_NUMBER:
+        await Form.start.set()
+        await message.reply("К сожалению регистрация на ближайшую игру закрыта. Мы будем рады видеть Вас на следующей игре!",
+        reply_markup=base_markup)
     else:
         await Form.nickname.set()
         await message.reply("Для регистрации впишите, пожалуйста, свой ник.",
