@@ -54,6 +54,9 @@ info_markup.add("Жесты")
 yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 yes_no_markup.add("Да", "Нет")
 
+cancel_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+cancel_markup.add("Отмена ↩")
+
 
 @dp.message_handler(state="*", commands='register', user_id=[436612042, 334756630])
 async def register_player(message: types.Message):
@@ -141,14 +144,17 @@ async def cmd_start(message: types.Message):
     await Form.start.set()
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
+
 @dp.message_handler(state="*", commands='start')
 async def cmd_start(message: types.Message):
     await Form.start.set()
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
+
 @dp.message_handler(lambda message: message.text not in ["Регистрация", "Инфо"], state=Form.start)
 async def process_start_invalid(message: types.Message):
     return await message.reply("Нажмите, пожалуйста, на одну из 2-х кнопок.", reply_markup=base_markup)
+
 
 @dp.message_handler(lambda message: message.text == "Регистрация", state=Form.start)
 async def register(message: types.Message):
@@ -168,11 +174,12 @@ async def register(message: types.Message):
     elif len(participants) >= MAX_NUMBER:
         await Form.start.set()
         await message.reply("К сожалению регистрация на ближайшую игру закрыта. Мы будем рады видеть Вас на следующей игре!",
-        reply_markup=base_markup)
+                            reply_markup=base_markup)
     else:
         await Form.nickname.set()
         await message.reply("Для регистрации впишите, пожалуйста, свой ник.",
-                            reply_markup=types.ReplyKeyboardRemove())
+                            reply_markup=cancel_markup)
+
 
 @dp.message_handler(lambda message: message.text == "Да", state=Form.unregister)
 async def unregister(message: types.Message, state: FSMContext):
@@ -196,6 +203,13 @@ async def unregister(message: types.Message, state: FSMContext):
 async def unregister(message: types.Message, state: FSMContext):
     await Form.start.set()
     await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
+
+
+@dp.message_handler(lambda message: message.text == "Отмена ↩", state=Form.nickname)
+async def cancel_registration(message: types.Message, state: FSMContext):
+    await Form.start.set()
+    await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
+
 
 @dp.message_handler(state=Form.nickname)
 async def process_name(message: types.Message, state: FSMContext):
