@@ -4,3 +4,4 @@ __pycache__/
 participants.txt
 server_info
 *.db
+.idea
