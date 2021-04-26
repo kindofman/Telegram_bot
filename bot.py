@@ -236,8 +236,15 @@ async def process_name(message: types.Message, state: FSMContext):
     participants.append(message.text)
     with open("participants.pkl", 'wb') as output:
         pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
-    await message.reply(f"Отлично, {message.text}! Регистрация прошла успешно.\n\nДля регистрации друга обратитесь к @naya_vokhidova",
-                        reply_markup=base_markup)
+
+    with open("game_info.txt") as file:
+        game_info = file.read()
+    date = game_info.split("\n")[0].split(maxsplit=1)[1]
+    time = game_info.split("\n")[1].split(maxsplit=4)[4].split(",")[0]
+    address = game_info.split("\n")[2].split(maxsplit=2)[2]
+    message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
+Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
+    await message.reply(message_text, reply_markup=base_markup)
     await Form.start.set()
 
 @dp.message_handler(lambda message: message.text == INFO_BUTTON, state=Form.start)
