@@ -42,20 +42,29 @@ class Form(StatesGroup):
     unregister_player = State()
     test = State()
 
+REGISTRATION_BUTTON = "Зарегистрироваться"
+INFO_BUTTON = "Информация по игре"
+NEAREST_GAME_BUTTON = "Ближайшая игра"
+RULES_BUTTON = "Правила игры"
+GESTURES_BUTTON = "Игровые жесты"
+CANCEL_BUTTON = "Отмена ↩"
+YES_BUTTON = "Да"
+NO_BUTTON = "Нет"
+
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-base_markup.add("Зарегистрироваться")
-base_markup.add("Информация по игре")
+base_markup.add(REGISTRATION_BUTTON)
+base_markup.add(INFO_BUTTON)
 
 info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-info_markup.add("Ближайшая игра")
-info_markup.add("Правила игры")
-info_markup.add("Игровые жесты")
+info_markup.add(NEAREST_GAME_BUTTON)
+info_markup.add(RULES_BUTTON)
+info_markup.add(GESTURES_BUTTON)
 
 yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-yes_no_markup.add("Да", "Нет")
+yes_no_markup.add(YES_BUTTON, NO_BUTTON)
 
 cancel_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-cancel_markup.add("Отмена ↩")
+cancel_markup.add(CANCEL_BUTTON)
 
 
 @dp.message_handler(state="*", commands='register', user_id=[436612042, 334756630])
@@ -125,7 +134,7 @@ async def reset_registration(message: types.Message):
     await message.reply("Вы уверены, что хотите обнулить регистрацию?", reply_markup=yes_no_markup)
     await Form.reset.set()
 
-@dp.message_handler(lambda message: message.text == "Да", state=Form.reset)
+@dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.reset)
 async def reset_registration_for_sure(message: types.Message):
     with open("ids.pkl", 'wb') as output:
         pickle.dump(dict(), output, pickle.HIGHEST_PROTOCOL)
@@ -134,7 +143,7 @@ async def reset_registration_for_sure(message: types.Message):
     await message.reply("Бот готов для регистрации участников на следующую игру", reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Нет", state=Form.reset)
+@dp.message_handler(lambda message: message.text == NO_BUTTON, state=Form.reset)
 async def cancel_reset_registration(message: types.Message):
     await Form.start.set()
     await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
@@ -151,12 +160,12 @@ async def cmd_start(message: types.Message):
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
 
-@dp.message_handler(lambda message: message.text not in ["Регистрация", "Инфо"], state=Form.start)
+@dp.message_handler(lambda message: message.text not in [REGISTRATION_BUTTON, INFO_BUTTON], state=Form.start)
 async def process_start_invalid(message: types.Message):
     return await message.reply("Нажмите, пожалуйста, на одну из 2-х кнопок.", reply_markup=base_markup)
 
 
-@dp.message_handler(lambda message: message.text == "Регистрация", state=Form.start)
+@dp.message_handler(lambda message: message.text == REGISTRATION_BUTTON, state=Form.start)
 async def register(message: types.Message):
     """
     Conversation's entry point
@@ -181,7 +190,7 @@ async def register(message: types.Message):
                             reply_markup=cancel_markup)
 
 
-@dp.message_handler(lambda message: message.text == "Да", state=Form.unregister)
+@dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.unregister)
 async def unregister(message: types.Message, state: FSMContext):
     with open("ids.pkl", "rb") as file:
         ids = pickle.load(file)
@@ -199,13 +208,13 @@ async def unregister(message: types.Message, state: FSMContext):
     await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Нет", state=Form.unregister)
+@dp.message_handler(lambda message: message.text == NO_BUTTON, state=Form.unregister)
 async def unregister(message: types.Message, state: FSMContext):
     await Form.start.set()
     await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
 
 
-@dp.message_handler(lambda message: message.text == "Отмена ↩", state=Form.nickname)
+@dp.message_handler(lambda message: message.text == CANCEL_BUTTON, state=Form.nickname)
 async def cancel_registration(message: types.Message, state: FSMContext):
     await Form.start.set()
     await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
@@ -231,12 +240,12 @@ async def process_name(message: types.Message, state: FSMContext):
                         reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Инфо", state=Form.start)
+@dp.message_handler(lambda message: message.text == INFO_BUTTON, state=Form.start)
 async def get_next_game_info(message: types.Message, state: FSMContext):
     await message.reply("Что Вы хотите узнать?", reply_markup=info_markup)
     await Form.info.set()
 
-@dp.message_handler(lambda message: message.text == "Ближайшая игра", state=Form.info)
+@dp.message_handler(lambda message: message.text == NEAREST_GAME_BUTTON, state=Form.info)
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
@@ -252,12 +261,12 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     await message.reply(game_info + participants_wrapped + empty_places, reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Жесты", state=Form.info)
+@dp.message_handler(lambda message: message.text == GESTURES_BUTTON, state=Form.info)
 async def get_next_game_info(message: types.Message, state: FSMContext):
     await message.reply_photo(open("gestures.png", 'rb'), reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(lambda message: message.text == "Правила", state=Form.info)
+@dp.message_handler(lambda message: message.text == RULES_BUTTON, state=Form.info)
 async def get_rules(message: types.Message, state:FSMContext):
     """
     max length of message is 4096
