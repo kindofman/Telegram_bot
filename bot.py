@@ -13,6 +13,7 @@ from aiogram.utils import executor
 import pickle
 import argparse
 
+from sqlighter import SQLighter
 from buttons import (
     REGISTRATION_BUTTON,
     INFO_BUTTON,
@@ -35,13 +36,11 @@ args = parser.parse_args()
 API_TOKEN = config.API_TOKEN_TEST if args.purpose == "test" else config.API_TOKEN_PROD
 
 logging.basicConfig(level=logging.INFO)
-
-
 bot = Bot(token=API_TOKEN)
-
-# For example use simple MemoryStorage for Dispatcher.
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+
+db = SQLighter("database.db")
 
 MAX_NUMBER = 14
 
@@ -66,11 +65,13 @@ async def register_player(message: types.Message):
 @dp.message_handler(state=Form.register_player)
 async def enter_player_nickname(message: types.Message):
     nick = message.text
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    participants.append(nick)
-    with open("participants.pkl", 'wb') as output:
-        pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    # participants.append(nick)
+    # with open("participants.pkl", 'wb') as output:
+    #     pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+
+    db.register_player(nick)
 
     await Form.start.set()
     await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=base_markup)
@@ -83,22 +84,28 @@ async def unregister_player_register(message: types.Message):
 @dp.message_handler(state=Form.unregister_player)
 async def enter_player_nickname_unregister(message: types.Message):
     nick = message.text
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    with open("ids.pkl", "rb") as file:
-        ids = pickle.load(file)
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    # with open("ids.pkl", "rb") as file:
+    #     ids = pickle.load(file)
+    #
+    # try:
+    #     index = len(participants) - 1 - participants[::-1].index(nick)
+    #     del participants[index]
+    #     # Players with same nicknames may be deleted at once
+    #     ids = {telegram_id: nick_ for telegram_id, nick_ in ids.items() if nick_ != nick}
+    #     with open("participants.pkl", 'wb') as output:
+    #         pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+    #     with open("ids.pkl", 'wb') as output:
+    #         pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
+    #     await message.reply(f"""Игрок с никнеймом "{nick}" успешно снят с регистрации.""", reply_markup=base_markup)
+    # except ValueError:
+    #     await message.reply(f"""Игрок с никнеймом "{nick}" не зарегистрирован.""", reply_markup=base_markup)
 
-    try:
-        index = len(participants) - 1 - participants[::-1].index(nick)
-        del participants[index]
-        # Players with same nicknames may be deleted at once
-        ids = {telegram_id: nick_ for telegram_id, nick_ in ids.items() if nick_ != nick}
-        with open("participants.pkl", 'wb') as output:
-            pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
-        with open("ids.pkl", 'wb') as output:
-            pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
+    if db.nickname_registered(nick):
+        db.unregister_player(nickname=nick)
         await message.reply(f"""Игрок с никнеймом "{nick}" успешно снят с регистрации.""", reply_markup=base_markup)
-    except ValueError:
+    else:
         await message.reply(f"""Игрок с никнеймом "{nick}" не зарегистрирован.""", reply_markup=base_markup)
 
     await Form.start.set()
@@ -127,10 +134,11 @@ async def reset_registration(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.reset)
 async def reset_registration_for_sure(message: types.Message):
-    with open("ids.pkl", 'wb') as output:
-        pickle.dump(dict(), output, pickle.HIGHEST_PROTOCOL)
-    with open("participants.pkl", 'wb') as output:
-        pickle.dump([], output, pickle.HIGHEST_PROTOCOL)
+    # with open("ids.pkl", 'wb') as output:
+    #     pickle.dump(dict(), output, pickle.HIGHEST_PROTOCOL)
+    # with open("participants.pkl", 'wb') as output:
+    #     pickle.dump([], output, pickle.HIGHEST_PROTOCOL)
+    db.clear()
     await message.reply("Бот готов для регистрации участников на следующую игру", reply_markup=base_markup)
     await Form.start.set()
 
@@ -162,16 +170,30 @@ async def register(message: types.Message):
     Conversation's entry point
     """
 
-    with open("ids.pkl", "rb") as file:
-        ids = pickle.load(file)
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    # Set state
-    if message.from_user.id in ids:
-        await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХотите сняться с регистрации?"',
-                            reply_markup=yes_no_markup)
+    # with open("ids.pkl", "rb") as file:
+    #     ids = pickle.load(file)
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    # # Set state
+    # if message.from_user.id in ids:
+    #     await message.reply(f'Вы уже зарегистрированы под ником "{ids[message.from_user.id]}".\n\nХотите сняться с регистрации?"',
+    #                         reply_markup=yes_no_markup)
+    #     await Form.unregister.set()
+    # elif len(participants) >= MAX_NUMBER:
+    #     await Form.start.set()
+    #     await message.reply("К сожалению регистрация на ближайшую игру закрыта. Мы будем рады видеть Вас на следующей игре!",
+    #                         reply_markup=base_markup)
+    # else:
+    #     await Form.nickname.set()
+    #     await message.reply("Для регистрации впишите, пожалуйста, свой ник.",
+    #                         reply_markup=cancel_markup)
+
+    if db.id_registered(message.from_user.id):
+        nick = db.get_registered_nickname(message.from_user.id)
+        await message.reply(f'Вы уже зарегистрированы под ником "{nick}".\n\nХотите сняться с регистрации?"',
+                    reply_markup=yes_no_markup)
         await Form.unregister.set()
-    elif len(participants) >= MAX_NUMBER:
+    elif db.count_registered_players() >= MAX_NUMBER:
         await Form.start.set()
         await message.reply("К сожалению регистрация на ближайшую игру закрыта. Мы будем рады видеть Вас на следующей игре!",
                             reply_markup=base_markup)
@@ -183,21 +205,25 @@ async def register(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.unregister)
 async def unregister(message: types.Message, state: FSMContext):
-    with open("ids.pkl", "rb") as file:
-        ids = pickle.load(file)
-    nick = ids[message.from_user.id]
-    del ids[message.from_user.id]
-    with open("ids.pkl", 'wb') as output:
-        pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    index = len(participants) - 1 - participants[::-1].index(nick)
-    del participants[index]
+    # with open("ids.pkl", "rb") as file:
+    #     ids = pickle.load(file)
+    # nick = ids[message.from_user.id]
+    # del ids[message.from_user.id]
+    # with open("ids.pkl", 'wb') as output:
+    #     pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    # index = len(participants) - 1 - participants[::-1].index(nick)
+    # del participants[index]
+    #
+    # with open("participants.pkl", 'wb') as output:
+    #     pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
 
-    with open("participants.pkl", 'wb') as output:
-        pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+    nick = db.get_registered_nickname(message.from_user.id)
+    db.unregister_player(message.from_user.id)
+    players_cnt = db.count_registered_players()
     await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
-    report_text = f"Игрок с ником {nick} снялся с регистрации.\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
+    report_text = f"Игрок с ником {nick} снялся с регистрации.\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Form.start.set()
@@ -216,30 +242,30 @@ async def cancel_registration(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.nickname)
 async def process_name(message: types.Message, state: FSMContext):
-    """
-    Process user name
-    """
-    with open("ids.pkl", "rb") as file:
-        ids = pickle.load(file)
-    ids[message.from_user.id] = message.text
-    with open("ids.pkl", 'wb') as output:
-        pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
-
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    participants.append(message.text)
-    with open("participants.pkl", 'wb') as output:
-        pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
-
+    # with open("ids.pkl", "rb") as file:
+    #     ids = pickle.load(file)
+    # ids[message.from_user.id] = message.text
+    # with open("ids.pkl", 'wb') as output:
+    #     pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
+    #
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    # participants.append(message.text)
+    # with open("participants.pkl", 'wb') as output:
+    #     pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+    #
     with open("game_info.txt") as file:
         game_info = file.read()
+    db.register_player(message.text, message.from_user.id)
+    players_cnt = db.count_registered_players()
+
     date = game_info.split("\n")[0].split(maxsplit=1)[1]
     time = game_info.split("\n")[1].split(maxsplit=4)[4].split(",")[0]
     address = game_info.split("\n")[2].split(maxsplit=2)[2]
     message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
 Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
     await message.reply(message_text, reply_markup=base_markup)
-    report_text = f"Игрок с ником {message.text} зарегистрировался.\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
+    report_text = f"Игрок с ником {message.text} зарегистрировался.\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Form.start.set()
@@ -253,9 +279,9 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
-    with open("participants.pkl", 'rb') as file:
-        participants = pickle.load(file)
-    print(message.from_user.id)
+    # with open("participants.pkl", 'rb') as file:
+    #     participants = pickle.load(file)
+    participants = db.get_registered_players()
     participants_wrapped = []
     for num, nickname in enumerate(participants, 1):
         participants_wrapped.append(f"{num}. {nickname}")
@@ -280,29 +306,6 @@ async def get_rules(message: types.Message, state:FSMContext):
     await message.reply(rules, parse_mode="Markdown", reply_markup=base_markup)
     await Form.start.set()
 
-@dp.message_handler(state=Form.test)
-async def process_gender(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['gender'] = message.text
-
-        # Remove keyboard
-        markup = types.ReplyKeyboardRemove()
-
-        # And send message
-        await bot.send_message(
-            message.chat.id,
-            md.text(
-                md.text('Hi! Nice to meet you,', md.bold(data['name'])),
-                md.text('Age:', md.code(data['age'])),
-                md.text('Gender:', data['gender']),
-                sep='\n',
-            ),
-            reply_markup=markup,
-            parse_mode=ParseMode.MARKDOWN,
-        )
-
-    # Finish conversation
-    await state.finish()
 
 
 if __name__ == '__main__':
