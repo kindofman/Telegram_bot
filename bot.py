@@ -218,12 +218,16 @@ async def unregister(message: types.Message, state: FSMContext):
     #
     # with open("participants.pkl", 'wb') as output:
     #     pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
+    print(f"id: {message.from_user.id}")
+    print(f"first_name: {message.from_user.first_name}")
+    print(f"last_name: {message.from_user.last_name}")
+    print(f"username: {message.from_user.username}")
 
     nick = db.get_registered_nickname(message.from_user.id)
     db.unregister_player(message.from_user.id)
     players_cnt = db.count_registered_players()
     await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
-    report_text = f"Игрок с ником {nick} снялся с регистрации.\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
+    report_text = f"Игрок снялся с регистрации.\n\nНикнейм: {nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Form.start.set()
@@ -265,7 +269,7 @@ async def process_name(message: types.Message, state: FSMContext):
     message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
 Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
     await message.reply(message_text, reply_markup=base_markup)
-    report_text = f"Игрок с ником {message.text} зарегистрировался.\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
+    report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nUsername: @{message.from_user.username}\n\nСвободных мест: {MAX_NUMBER - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Form.start.set()
