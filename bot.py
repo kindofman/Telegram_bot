@@ -13,6 +13,21 @@ from aiogram.utils import executor
 import pickle
 import argparse
 
+from buttons import (
+    REGISTRATION_BUTTON,
+    INFO_BUTTON,
+    NEAREST_GAME_BUTTON,
+    RULES_BUTTON,
+    GESTURES_BUTTON,
+    CANCEL_BUTTON,
+    YES_BUTTON,
+    NO_BUTTON,
+    base_markup,
+    info_markup,
+    yes_no_markup,
+    cancel_markup
+)
+
 parser = argparse.ArgumentParser(description='Mafia bot')
 parser.add_argument("purpose", help="Mode", default="test", choices={"test", "prod"}, nargs="?")
 args = parser.parse_args()
@@ -41,30 +56,6 @@ class Form(StatesGroup):
     register_player = State()
     unregister_player = State()
     test = State()
-
-REGISTRATION_BUTTON = "Зарегистрироваться"
-INFO_BUTTON = "Информация по игре"
-NEAREST_GAME_BUTTON = "Ближайшая игра"
-RULES_BUTTON = "Правила игры"
-GESTURES_BUTTON = "Игровые жесты"
-CANCEL_BUTTON = "Отмена ↩"
-YES_BUTTON = "Да"
-NO_BUTTON = "Нет"
-
-base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-base_markup.add(REGISTRATION_BUTTON)
-base_markup.add(INFO_BUTTON)
-
-info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-info_markup.add(NEAREST_GAME_BUTTON)
-info_markup.add(RULES_BUTTON)
-info_markup.add(GESTURES_BUTTON)
-
-yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-yes_no_markup.add(YES_BUTTON, NO_BUTTON)
-
-cancel_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-cancel_markup.add(CANCEL_BUTTON)
 
 
 @dp.message_handler(state="*", commands='register', user_id=[436612042, 334756630])
@@ -206,6 +197,9 @@ async def unregister(message: types.Message, state: FSMContext):
     with open("participants.pkl", 'wb') as output:
         pickle.dump(participants, output, pickle.HIGHEST_PROTOCOL)
     await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
+    report_text = f"Игрок с ником {nick} снялся с регистрации.\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
+    for user_id in [436612042, 334756630]:
+        await bot.send_message(user_id, report_text)
     await Form.start.set()
 
 @dp.message_handler(lambda message: message.text == NO_BUTTON, state=Form.unregister)
@@ -245,6 +239,9 @@ async def process_name(message: types.Message, state: FSMContext):
     message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
 Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
     await message.reply(message_text, reply_markup=base_markup)
+    report_text = f"Игрок с ником {message.text} зарегистрировался.\n\nСвободных мест: {MAX_NUMBER - len(participants)}"
+    for user_id in [436612042, 334756630]:
+        await bot.send_message(user_id, report_text)
     await Form.start.set()
 
 @dp.message_handler(lambda message: message.text == INFO_BUTTON, state=Form.start)
