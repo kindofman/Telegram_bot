@@ -66,7 +66,7 @@ async def register_player(message: types.Message):
 
 @dp.message_handler(state=Form.register_player)
 async def enter_player_nickname(message: types.Message):
-    nick = message.text
+    nick = message.text.replace("/", "")
     db.register_player(nick)
 
     await Form.start.set()
@@ -210,7 +210,7 @@ async def cancel_registration(message: types.Message, state: FSMContext):
 async def process_name(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
-    db.register_player(message.text, message.from_user.id)
+    db.register_player(message.text.replace("/", ""), message.from_user.id)
     players_cnt = db.count_registered_players()
 
     date = game_info.split("\n")[0].split(maxsplit=1)[1]
