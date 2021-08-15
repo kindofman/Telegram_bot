@@ -59,7 +59,7 @@ class Form(StatesGroup):
     test = State()
 
 
-@dp.message_handler(state="*", commands='register', user_id=[436612042, 334756630])
+@dp.message_handler(state="*", commands='r', user_id=[436612042, 334756630])
 async def register_player(message: types.Message):
     await message.reply("Введите никнейм игрока для регистрации", reply_markup=types.ReplyKeyboardRemove())
     await Form.register_player.set()
@@ -72,7 +72,7 @@ async def enter_player_nickname(message: types.Message):
     await Form.start.set()
     await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=base_markup)
 
-@dp.message_handler(state="*", commands='unregister', user_id=[436612042, 334756630])
+@dp.message_handler(state="*", commands='u', user_id=[436612042, 334756630])
 async def unregister_player_register(message: types.Message):
     await message.reply("Введите никнейм игрока для снятия с регистрации.", reply_markup=types.ReplyKeyboardRemove())
     await Form.unregister_player.set()
