@@ -59,5 +59,23 @@ class SQLighter:
 
             return self.cursor.execute("DELETE FROM current_game")
 
+    def subscriber_exists(self, telegram_id):
+        with self.connection:
+            result = self.cursor.execute(f"""SELECT EXISTS (SELECT * FROM subscribers 
+                                                          WHERE telegram_id = {telegram_id}) """).fetchall()[0][0]
+            return bool(result)
+
+    def add_subscriber(self, user):
+        with self.connection:
+            return self.cursor.execute(
+                f"""INSERT INTO subscribers VALUES 
+                ({user.id}, '{user.first_name}', '{user.last_name}', '{user.username}', {int(time.time())}, 1)"""
+            )
+
+    def get_subscribers(self):
+        with self.connection:
+            result = self.cursor.execute(f"""SELECT telegram_id FROM subscribers WHERE is_subscribed = 1""")
+            return [i[0] for i in result]
+
     def close(self):
         self.connection.close()

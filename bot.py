@@ -19,13 +19,19 @@ from buttons import (
     NEAREST_GAME_BUTTON,
     RULES_BUTTON,
     GESTURES_BUTTON,
+    SUBSCRIBE_BUTTON,
     CANCEL_BUTTON,
     YES_BUTTON,
     NO_BUTTON,
+    MAILING_BUTTON,
+    EXIT_ADMIN_BUTTON,
+    ADD_PLAYER_BUTTON,
+    REMOVE_PLAYER_BUTTON,
     base_markup,
     info_markup,
     yes_no_markup,
-    cancel_markup
+    cancel_markup,
+    admin_markup
 )
 
 parser = argparse.ArgumentParser(description='Mafia bot')
@@ -56,25 +62,68 @@ class Form(StatesGroup):
     reset = State()
     register_player = State()
     unregister_player = State()
+    admin = State()
+    mailing = State()
     test = State()
 
 
-@dp.message_handler(state="*", commands='r', user_id=[436612042, 334756630])
+@dp.message_handler(lambda message: message.text == "Админ", state="*", user_id=[436612042, 334756630])
+async def register_player(message: types.Message):
+    await message.reply("Привет админам!", reply_markup=admin_markup)
+    await Form.admin.set()
+
+@dp.message_handler(lambda message: message.text == MAILING_BUTTON, state=Form.admin)
+async def get_message_for_subscribers(message: types.Message):
+    await message.reply("Введите текст для рассылки", reply_markup=cancel_markup)
+    await Form.mailing.set()
+
+@dp.message_handler(lambda message: message.text == EXIT_ADMIN_BUTTON, state=Form.admin)
+async def return_to_main_menu(message: types.Message):
+    await message.reply("Теперь ты снова как все пользователи 🙈", reply_markup=base_markup)
+    await Form.start.set()
+
+@dp.message_handler(lambda message: message.text == CANCEL_BUTTON, state=Form.mailing)
+async def return_to_admin_menu(message: types.Message):
+    await message.reply("Возврат в меню админа", reply_markup=admin_markup)
+    await Form.admin.set()
+
+@dp.message_handler(state=Form.mailing)
+async def dispatch_mailing(message: types.Message):
+    subscribers = db.get_subscribers()
+    for user in subscribers:
+        await bot.send_message(user, message.text)
+    await message.reply("Рассылка разослана.", reply_markup=admin_markup)
+    await Form.admin.set()
+
+
+@dp.message_handler(lambda message: message.text == ADD_PLAYER_BUTTON, state=Form.admin)
 async def register_player(message: types.Message):
     await message.reply("Введите никнейм игрока для регистрации", reply_markup=types.ReplyKeyboardRemove())
     await Form.register_player.set()
+
+@dp.message_handler(lambda message: message.text == REMOVE_PLAYER_BUTTON, state=Form.admin)
+async def unregister_player_register(message: types.Message):
+    players = db.get_registered_players()
+    players = "\n".join(map(str, players))
+    await message.reply(
+        f"""Введите никнейм игрока для снятия с регистрации.\n{players}""",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
+    await Form.unregister_player.set()
 
 @dp.message_handler(state=Form.register_player)
 async def enter_player_nickname(message: types.Message):
     nick = message.text.replace("/", "")
     db.register_player(nick)
-
-    await Form.start.set()
-    await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=base_markup)
+    await Form.admin.set()
+    await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=admin_markup)
 
 @dp.message_handler(state="*", commands='u', user_id=[436612042, 334756630])
 async def unregister_player_register(message: types.Message):
-    await message.reply("Введите никнейм игрока для снятия с регистрации.", reply_markup=types.ReplyKeyboardRemove())
+    await message.reply(
+        f"""Введите никнейм игрока для снятия с регистрации.""",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
     await Form.unregister_player.set()
 
 @dp.message_handler(state=Form.unregister_player)
@@ -82,11 +131,11 @@ async def enter_player_nickname_unregister(message: types.Message):
     nick = message.text
     if db.nickname_registered(nick):
         db.unregister_player(nickname=nick)
-        await message.reply(f"""Игрок с никнеймом "{nick}" успешно снят с регистрации.""", reply_markup=base_markup)
+        await message.reply(f"""Игрок с никнеймом "{nick}" успешно снят с регистрации.""", reply_markup=admin_markup)
     else:
-        await message.reply(f"""Игрок с никнеймом "{nick}" не зарегистрирован.""", reply_markup=base_markup)
+        await message.reply(f"""Игрок с никнеймом "{nick}" не зарегистрирован.""", reply_markup=admin_markup)
 
-    await Form.start.set()
+    await Form.admin.set()
 
 
 @dp.message_handler(state="*", commands='newgame', user_id=[436612042, 334756630])
@@ -152,7 +201,7 @@ async def cmd_start(message: types.Message):
     await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
 
 
-@dp.message_handler(lambda message: message.text not in [REGISTRATION_BUTTON, INFO_BUTTON], state=Form.start)
+@dp.message_handler(lambda message: message.text not in [REGISTRATION_BUTTON, INFO_BUTTON, SUBSCRIBE_BUTTON], state=Form.start)
 async def process_start_invalid(message: types.Message):
     return await message.reply("Нажмите, пожалуйста, на одну из 2-х кнопок.", reply_markup=base_markup)
 
@@ -258,6 +307,15 @@ async def get_rules(message: types.Message, state:FSMContext):
     with open("rules.txt") as f:
         rules = f.read()
     await message.reply(rules, parse_mode="Markdown", reply_markup=base_markup)
+    await Form.start.set()
+
+@dp.message_handler(lambda message: message.text == SUBSCRIBE_BUTTON, state=Form.start)
+async def add_subscriber(message: types.Message, state:FSMContext):
+    if not db.subscriber_exists(message.from_user.id):
+        db.add_subscriber(message.from_user)
+        await message.reply("Вы успешно подписались на обновления 🤗", reply_markup=base_markup)
+    else:
+        await message.reply("Вы уже подписаны 💁‍♀️", reply_markup=base_markup)
     await Form.start.set()
 
 
