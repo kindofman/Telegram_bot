@@ -1,14 +1,15 @@
 from aiogram import types
 
 
-REGISTRATION_BUTTON = "Зарегистрироваться"
-INFO_BUTTON = "Информация по игре"
-NEAREST_GAME_BUTTON = "Ближайшая игра"
-RULES_BUTTON = "Правила игры"
-GESTURES_BUTTON = "Игровые жесты"
-CANCEL_BUTTON = "Отмена ↩"
-YES_BUTTON = "Да"
-NO_BUTTON = "Нет"
+REGISTRATION_BUTTON = "Зарегистрироваться 🙋🏼‍♂️‍‍‍"
+INFO_BUTTON = "Информация по игре ❓"
+NEAREST_GAME_BUTTON = "Ближайшая игра 📆"
+RULES_BUTTON = "Правила игры 📜"
+GESTURES_BUTTON = "Игровые жесты 👌"
+CANCEL_BUTTON = "Отмена 🙅🏼"
+YES_BUTTON = "Да ✅"
+NO_BUTTON = "Нет ❌"
+SUBSCRIBE_BUTTON = "Подписаться на рассылку"
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 base_markup.add(REGISTRATION_BUTTON)
