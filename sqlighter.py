@@ -77,5 +77,11 @@ class SQLighter:
             result = self.cursor.execute(f"""SELECT telegram_id FROM subscribers WHERE is_subscribed = 1""")
             return [i[0] for i in result]
 
+    def get_subscribers_rows(self):
+        with self.connection:
+            result = self.cursor.execute(
+                f"SELECT first_name, last_name, username, create_time FROM subscribers WHERE is_subscribed = 1"
+            ).fetchall()
+            return result
     def close(self):
         self.connection.close()

@@ -11,6 +11,7 @@ from aiogram.types import ParseMode
 from aiogram.utils import executor
 
 import argparse
+from datetime import datetime
 
 from sqlighter import SQLighter
 from buttons import (
@@ -24,6 +25,7 @@ from buttons import (
     YES_BUTTON,
     NO_BUTTON,
     MAILING_BUTTON,
+    VIEW_SUBSCRIBERS_BUTTON,
     EXIT_ADMIN_BUTTON,
     ADD_PLAYER_BUTTON,
     REMOVE_PLAYER_BUTTON,
@@ -76,6 +78,15 @@ async def register_player(message: types.Message):
 async def get_message_for_subscribers(message: types.Message):
     await message.reply("Введите текст для рассылки", reply_markup=cancel_markup)
     await Form.mailing.set()
+
+@dp.message_handler(lambda message: message.text == VIEW_SUBSCRIBERS_BUTTON, state=Form.admin)
+async def view_subscribers(message: types.Message):
+    result = []
+    for first_name, last_name, username, time in db.get_subscribers_rows():
+        row = (str(first_name), str(last_name), str(username), datetime.fromtimestamp(time).date().__str__())
+        result.append(" ".join(row))
+    result = "\n\n".join(result)
+    await message.reply(result, reply_markup=admin_markup)
 
 @dp.message_handler(lambda message: message.text == EXIT_ADMIN_BUTTON, state=Form.admin)
 async def return_to_main_menu(message: types.Message):
@@ -178,6 +189,7 @@ async def reset_registration(message: types.Message):
     await message.reply("Вы уверены, что хотите обнулить регистрацию?", reply_markup=yes_no_markup)
     await Form.reset.set()
 
+
 @dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.reset)
 async def reset_registration_for_sure(message: types.Message):
     db.clear()
@@ -229,11 +241,6 @@ async def register(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.unregister)
 async def unregister(message: types.Message, state: FSMContext):
-    print(f"id: {message.from_user.id}")
-    print(f"first_name: {message.from_user.first_name}")
-    print(f"last_name: {message.from_user.last_name}")
-    print(f"username: {message.from_user.username}")
-
     nick = db.get_registered_nickname(message.from_user.id)
     db.unregister_player(message.from_user.id)
     players_cnt = db.count_registered_players()

@@ -11,6 +11,7 @@ YES_BUTTON = "Да ✅"
 NO_BUTTON = "Нет ❌"
 SUBSCRIBE_BUTTON = "Подписаться на рассылку 🔔"
 MAILING_BUTTON = "Рассылка 📩"
+VIEW_SUBSCRIBERS_BUTTON = "Посмотреть подписчиков"
 ADD_PLAYER_BUTTON = "Добавить игрока 👩‍👦"
 REMOVE_PLAYER_BUTTON = "Убрать игрока 🏃‍♂️"
 EXIT_ADMIN_BUTTON = "Выйти из админских кнопок ✈️"
@@ -31,6 +32,6 @@ cancel_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, 
 cancel_markup.add(CANCEL_BUTTON)
 
 admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-admin_markup.add(MAILING_BUTTON)
+admin_markup.row(MAILING_BUTTON, VIEW_SUBSCRIBERS_BUTTON)
 admin_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
 admin_markup.add(EXIT_ADMIN_BUTTON)
