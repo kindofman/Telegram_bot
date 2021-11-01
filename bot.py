@@ -204,18 +204,18 @@ async def cancel_reset_registration(message: types.Message):
 @dp.message_handler(state=None)
 async def cmd_start(message: types.Message):
     await Form.start.set()
-    await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
+    await message.reply("""Добро пожаловать в Клуб Мафии "Castellano"! Что Вас интересует?""", reply_markup=base_markup)
 
 
 @dp.message_handler(state="*", commands='start')
 async def cmd_start(message: types.Message):
     await Form.start.set()
-    await message.reply("Привет! Круто, что Вы здесь! Что Вас интересует?", reply_markup=base_markup)
+    await message.reply("""Добро пожаловать в Клуб Мафии "Castellano"! Что Вас интересует?""", reply_markup=base_markup)
 
 
 @dp.message_handler(lambda message: message.text not in [REGISTRATION_BUTTON, INFO_BUTTON, SUBSCRIBE_BUTTON], state=Form.start)
 async def process_start_invalid(message: types.Message):
-    return await message.reply("Нажмите, пожалуйста, на одну из 2-х кнопок.", reply_markup=base_markup)
+    return await message.reply("Нажмите, пожалуйста, на кнопку.", reply_markup=base_markup)
 
 
 @dp.message_handler(lambda message: message.text == REGISTRATION_BUTTON, state=Form.start)
