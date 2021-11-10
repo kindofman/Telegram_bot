@@ -288,17 +288,17 @@ async def cancel_registration(message: types.Message, state: FSMContext):
     await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
 
 # !!!ЗАГЛУШКА!!!
-@dp.message_handler(state=Form.nickname)
-async def process_name(message: types.Message, state: FSMContext):
-    message_text = f"""{message.text}, для подтверждения регистрации отправьте 500₽ на номер +79139422767 (Тинькофф).
-В комментарии к переводу напишите свой никнейм."""
-    db.register_player(message.text.replace("/", ""), message.from_user.id)
-    await message.reply(message_text, reply_markup=base_markup)
-    players_cnt = db.count_registered_players()
-    report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
-    for user_id in [436612042, 334756630]:
-        await bot.send_message(user_id, report_text)
-    await Form.start.set()
+# @dp.message_handler(state=Form.nickname)
+# async def process_name(message: types.Message, state: FSMContext):
+#     message_text = f"""{message.text}, для подтверждения регистрации отправьте 500₽ на номер +79139422767 (Тинькофф).
+# В комментарии к переводу напишите свой никнейм."""
+#     db.register_player(message.text.replace("/", ""), message.from_user.id)
+#     await message.reply(message_text, reply_markup=base_markup)
+#     players_cnt = db.count_registered_players()
+#     report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
+#     for user_id in [436612042, 334756630]:
+#         await bot.send_message(user_id, report_text)
+#     await Form.start.set()
 
 
 @dp.message_handler(state=Form.nickname)
