@@ -83,5 +83,16 @@ class SQLighter:
                 f"SELECT first_name, last_name, username, create_time FROM subscribers WHERE is_subscribed = 1"
             ).fetchall()
             return result
+
+    def get_all_players_nicks(self):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT nickname_lowered FROM players").fetchall()
+            return [i[0] for i in result]
+
+    def get_all_players_ids(self):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT telegram_id FROM players").fetchall()
+            return [i[0] for i in result]
+
     def close(self):
         self.connection.close()

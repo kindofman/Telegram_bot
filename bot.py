@@ -29,6 +29,8 @@ from buttons import (
     EXIT_ADMIN_BUTTON,
     ADD_PLAYER_BUTTON,
     REMOVE_PLAYER_BUTTON,
+    VIEW_PLAYERS_BUTTON,
+    MAILING_ALL_BUTTON,
     base_markup,
     info_markup,
     yes_no_markup,
@@ -66,6 +68,8 @@ class Form(StatesGroup):
     unregister_player = State()
     admin = State()
     mailing = State()
+    print_players = State()
+    mailing_all = State()
     test = State()
 
 
@@ -103,10 +107,37 @@ async def return_to_admin_menu(message: types.Message):
     await Form.admin.set()
 
 
+@dp.message_handler(lambda message: message.text == CANCEL_BUTTON, state=Form.mailing_all)
+async def return_to_admin_menu(message: types.Message):
+    await message.reply("Возврат в меню админа", reply_markup=admin_markup)
+    await Form.admin.set()
+
+
 @dp.message_handler(state=Form.mailing)
 async def dispatch_mailing(message: types.Message):
     subscribers = db.get_subscribers()
     for user in subscribers:
+        await bot.send_message(user, message.text)
+    await message.reply("Рассылка разослана.", reply_markup=admin_markup)
+    await Form.admin.set()
+
+
+@dp.message_handler(lambda message: message.text == VIEW_PLAYERS_BUTTON, state=Form.admin)
+async def view_all_players(message: types.Message):
+    players = db.get_all_players_nicks()
+    await message.reply("\n".join(players), reply_markup=admin_markup)
+
+
+@dp.message_handler(lambda message: message.text == MAILING_ALL_BUTTON, state=Form.admin)
+async def get_message_for_subscribers(message: types.Message):
+    await message.reply("Введите текст для рассылки всем игрокам", reply_markup=cancel_markup)
+    await Form.mailing_all.set()
+
+
+@dp.message_handler(state=Form.mailing_all)
+async def dispatch_mailing_to_all(message: types.Message):
+    players = db.get_all_players_ids()
+    for user in players:
         await bot.send_message(user, message.text)
     await message.reply("Рассылка разослана.", reply_markup=admin_markup)
     await Form.admin.set()
