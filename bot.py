@@ -342,8 +342,9 @@ async def process_name(message: types.Message, state: FSMContext):
     date = game_info.split("\n")[0].split(maxsplit=1)[1]
     time = game_info.split("\n")[1].split(maxsplit=4)[4].split(",")[0]
     address = game_info.split("\n")[2].split(maxsplit=2)[2]
-    message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
-Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
+    message_text = f"""Отлично, {message.text}! Для завершения регистрации оплатите игровой вечер по номеру +79139422767 на Сбербанк/Тинькофф с указанием никнейма"""
+#     message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
+# Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
     await message.reply(message_text, reply_markup=base_markup)
     report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
     for user_id in [436612042, 334756630]:
