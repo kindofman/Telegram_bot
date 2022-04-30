@@ -1,6 +1,6 @@
 *.ipynb
 *.pkl
 __pycache__/
-participants.txt
+*.txt
 server_info
 *.db
