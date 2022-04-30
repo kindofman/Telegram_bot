@@ -1,6 +1,30 @@
 import sqlite3
 import time
 
+"""
+TABLES:
+current_game: 
+    telegram_id INTEGER
+    nickname_lowered TEXT 
+    create_time INTEGER
+    nickname TEXT
+    paid INTEGER
+    
+subscribers: 
+    telegram_id INTEGER
+    first_name TEXT
+    last_name TEXT 
+    username TEXT 
+    create_time INTEGER 
+    is_subscribed INTEGER
+    
+players
+    telegram_id INTEGER
+    nickname_lowered TEXT
+    create_time INTEGER
+    is_admin INTEGER
+"""
+
 class SQLighter:
     def __init__(self, database_file):
         """Connecting to DB and saving cursor"""
@@ -9,8 +33,10 @@ class SQLighter:
 
     def get_registered_players(self):
         with self.connection:
-            rows = self.cursor.execute("SELECT nickname FROM current_game").fetchall()
-            return [r[0] for r in rows]
+            rows = self.cursor.execute("SELECT nickname, paid FROM current_game").fetchall()
+            players = [r[0] for r in rows]
+            paid = [r[1] for r in rows]
+            return players, paid
 
     def count_registered_players(self):
         with self.connection:
@@ -19,7 +45,7 @@ class SQLighter:
     def register_player(self, nickname, telegram_id=-1):
         with self.connection:
             return self.cursor.execute(f"""INSERT INTO current_game VALUES 
-                                           ({telegram_id}, '{nickname.lower()}', {int(time.time())}, '{nickname}')""")
+                                           ({telegram_id}, '{nickname.lower()}', {int(time.time())}, '{nickname}', 0)""")
 
     def unregister_player(self, telegram_id=None, nickname=None):
         assert telegram_id is not None or nickname is not None, "telegram_id or nickname must be passed"
@@ -52,7 +78,8 @@ class SQLighter:
                                                      (SELECT 1 FROM players 
                                                       WHERE current_game.telegram_id = players.telegram_id
                                                           AND current_game.nickname_lowered = players.nickname_lowered)
-                                                      AND current_game.telegram_id != -1""").fetchall()
+                                                      AND current_game.telegram_id != -1
+                                                      AND current_game.paid = 1""").fetchall()
             for telegram_id, nickname_lowered in new_players:
                 self.cursor.execute(f"""INSERT INTO players VALUES
                                         ({telegram_id}, '{nickname_lowered}', {int(time.time())}, 0)""")
@@ -93,6 +120,16 @@ class SQLighter:
         with self.connection:
             result = self.cursor.execute(f"SELECT telegram_id FROM players").fetchall()
             return [i[0] for i in result]
+
+    def change_payment_state(self, nickname):
+        with self.connection:
+            status = self.cursor.execute(
+                f"SELECT paid FROM current_game WHERE nickname = '{nickname}'"
+            ).fetchall()[0][0]
+            new_status = not status
+            self.cursor.execute(
+                f"""UPDATE current_game SET paid = {new_status} WHERE nickname = '{nickname}'"""
+            )
 
     def close(self):
         self.connection.close()

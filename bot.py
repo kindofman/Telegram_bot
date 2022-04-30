@@ -1,6 +1,7 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.utils import executor
 from admin_logic import *
+from utils import process_name
 
 
 def get_max_number():
@@ -125,7 +126,7 @@ async def cancel_registration(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=Form.nickname)
-async def process_name(message: types.Message, state: FSMContext):
+async def process_name_stage(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
     db.register_player(message.text.replace("/", ""), message.from_user.id)
@@ -154,9 +155,10 @@ async def process_mafia(message: types.Message, state: FSMContext):
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
-    participants = db.get_registered_players()
+    participants, paid = db.get_registered_players()
+    processed_nicks = [process_name(nick, status) for nick, status in zip(participants, paid)]
     participants_wrapped = []
-    for num, nickname in enumerate(participants, 1):
+    for num, nickname in enumerate(processed_nicks, 1):
         participants_wrapped.append(f"{num}. {nickname}")
     participants_wrapped = "\n".join(participants_wrapped)
     participants_wrapped = "\n\nЗарегистрированные участники\n" + participants_wrapped
