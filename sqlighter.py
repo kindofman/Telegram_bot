@@ -126,7 +126,7 @@ class SQLighter:
             status = self.cursor.execute(
                 f"SELECT paid FROM current_game WHERE nickname = '{nickname}'"
             ).fetchall()[0][0]
-            new_status = not status
+            new_status = int(not status)
             self.cursor.execute(
                 f"""UPDATE current_game SET paid = {new_status} WHERE nickname = '{nickname}'"""
             )
