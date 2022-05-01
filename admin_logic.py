@@ -81,10 +81,10 @@ async def register_player(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == REMOVE_PLAYER_BUTTON, state=Form.admin)
 async def unregister_player_register(message: types.Message):
-    players, paid = db.get_registered_players()
+    players, status = db.get_registered_players()
     players_buttons = types.InlineKeyboardMarkup()
-    for p, paid in zip(players, paid):
-        button_name = process_name(p, paid)
+    for p, s in zip(players, status):
+        button_name = process_name(p, s)
         nickname_button = types.InlineKeyboardButton(button_name, callback_data=f"{p}|nickname")
         players_buttons.add(nickname_button)
     await message.reply(
@@ -115,10 +115,12 @@ async def enter_player_nickname(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == PAYMENT_VERIFIED_BUTTON, state=Form.admin)
 async def process_payment(message: types.Message):
-    players, paid = db.get_registered_players()
+    players, status = db.get_registered_players()
     players_buttons = types.InlineKeyboardMarkup()
-    for p, paid in zip(players, paid):
-        button_name = process_name(p, paid)
+    for p, s in zip(players, status):
+        if s not in [0, 1]:
+            continue
+        button_name = process_name(p, s)
         nickname_button = types.InlineKeyboardButton(button_name, callback_data=f"{p}|payment")
         players_buttons.add(nickname_button)
     await message.reply(
@@ -128,10 +130,38 @@ async def process_payment(message: types.Message):
 
 
 @dp.callback_query_handler(lambda c: c.data.endswith("payment"), state=Form.admin)
-async def process_callback_player_remove(callback_query: types.CallbackQuery):
+async def process_callback_payment(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     nickname = callback_query.data.split("|")[0]
     db.change_payment_state(nickname)
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"""Статус оплаты для игрока "{nickname}" обновлен.""", reply_markup=admin_markup
+    )
+    await Form.admin.set()
+
+
+@dp.message_handler(lambda message: message.text == NEWBY_STATE_BUTTON, state=Form.admin)
+async def process_payment(message: types.Message):
+    players, status = db.get_registered_players()
+    players_buttons = types.InlineKeyboardMarkup()
+    for p, s in zip(players, status):
+        if s not in [0, 2]:
+            continue
+        button_name = process_name(p, s)
+        nickname_button = types.InlineKeyboardButton(button_name, callback_data=f"{p}|newby")
+        players_buttons.add(nickname_button)
+    await message.reply(
+        f"""Статус новичков""",
+        reply_markup=players_buttons,
+    )
+
+
+@dp.callback_query_handler(lambda c: c.data.endswith("newby"), state=Form.admin)
+async def process_callback_newby_state(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    nickname = callback_query.data.split("|")[0]
+    db.change_newby_state(nickname)
     await bot.send_message(
         callback_query.from_user.id,
         f"""Статус оплаты для игрока "{nickname}" обновлен.""", reply_markup=admin_markup

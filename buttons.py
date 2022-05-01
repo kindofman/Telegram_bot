@@ -20,6 +20,7 @@ SPY_BUTTON = "Шпион 👀"
 VOTE_BUTTON = "Голосование 🙋🏻"
 BOARD_GAMES_BUTTON = "Настолки 🎲"
 PAYMENT_VERIFIED_BUTTON = "Оплачено?"
+NEWBY_STATE_BUTTON = "Новый игрок"
 
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
@@ -42,7 +43,7 @@ yes_no_markup.add(YES_BUTTON, NO_BUTTON)
 admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 # admin_markup.row(MAILING_BUTTON, VIEW_SUBSCRIBERS_BUTTON)
 # admin_markup.row(VIEW_PLAYERS_BUTTON, MAILING_ALL_BUTTON)
-admin_markup.row(MAILING_ALL_BUTTON, PAYMENT_VERIFIED_BUTTON)
+admin_markup.row(NEWBY_STATE_BUTTON, PAYMENT_VERIFIED_BUTTON)
 admin_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
 admin_markup.add(EXIT_ADMIN_BUTTON)
 

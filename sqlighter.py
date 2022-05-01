@@ -8,7 +8,7 @@ current_game:
     nickname_lowered TEXT 
     create_time INTEGER
     nickname TEXT
-    paid INTEGER
+    status INTEGER (0 - none, 1 - paid, 2 - new)
     
 subscribers: 
     telegram_id INTEGER
@@ -33,10 +33,10 @@ class SQLighter:
 
     def get_registered_players(self):
         with self.connection:
-            rows = self.cursor.execute("SELECT nickname, paid FROM current_game").fetchall()
+            rows = self.cursor.execute("SELECT nickname, status FROM current_game").fetchall()
             players = [r[0] for r in rows]
-            paid = [r[1] for r in rows]
-            return players, paid
+            status = [r[1] for r in rows]
+            return players, status
 
     def count_registered_players(self):
         with self.connection:
@@ -124,11 +124,21 @@ class SQLighter:
     def change_payment_state(self, nickname):
         with self.connection:
             status = self.cursor.execute(
-                f"SELECT paid FROM current_game WHERE nickname = '{nickname}'"
+                f"SELECT status FROM current_game WHERE nickname = '{nickname}'"
             ).fetchall()[0][0]
-            new_status = int(not status)
+            new_status = (not status) * 1
             self.cursor.execute(
-                f"""UPDATE current_game SET paid = {new_status} WHERE nickname = '{nickname}'"""
+                f"""UPDATE current_game SET status = {new_status} WHERE nickname = '{nickname}'"""
+            )
+
+    def change_newby_state(self, nickname):
+        with self.connection:
+            status = self.cursor.execute(
+                f"SELECT status FROM current_game WHERE nickname = '{nickname}'"
+            ).fetchall()[0][0]
+            new_status = (not status) * 2
+            self.cursor.execute(
+                f"""UPDATE current_game SET status = {new_status} WHERE nickname = '{nickname}'"""
             )
 
     def close(self):
