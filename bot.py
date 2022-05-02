@@ -155,15 +155,20 @@ async def process_mafia(message: types.Message, state: FSMContext):
 async def get_next_game_info(message: types.Message, state: FSMContext):
     with open("game_info.txt") as file:
         game_info = file.read()
-    participants, paid = db.get_registered_players()
-    processed_nicks = [process_name(nick, status) for nick, status in zip(participants, paid)]
+    participants, status = db.get_registered_players()
+    processed_nicks = [process_name(nick, s) for nick, s in zip(participants, status)]
     participants_wrapped = []
     for num, nickname in enumerate(processed_nicks, 1):
         participants_wrapped.append(f"{num}. {nickname}")
-    participants_wrapped = "\n".join(participants_wrapped)
-    participants_wrapped = "\n\nЗарегистрированные участники\n" + participants_wrapped
+    # participants_wrapped = "\n".join(participants_wrapped)
+    participants_wrapped = "```\n\n" + "\n".join(participants_wrapped) + "```"
+    participants_wrapped = "\n\nЗарегистрированные участники:\n" + participants_wrapped
     empty_places = f"\n\nСвободных мест: {get_max_number() - len(participants)}"
-    await message.reply(game_info + participants_wrapped + empty_places, reply_markup=nearest_game_markup)
+    await message.reply(
+        game_info + participants_wrapped + empty_places,
+        reply_markup=nearest_game_markup,
+        parse_mode="Markdown"
+    )
     await Form.nearest_game.set()
 
 

@@ -12,7 +12,7 @@ def process_name(name, status):
         suffix = " ✅"
     elif status == 2:
         suffix = " 🆕"
-    return name + suffix
+    return f"{name:{19}}{suffix}"
 
 def create_inline_buttons(
         allowed_statuses: list,
