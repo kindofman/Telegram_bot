@@ -139,7 +139,7 @@ async def process_name_stage(message: types.Message, state: FSMContext):
 #     message_text = f"""Отлично, {message.text}! Регистрация прошла успешно.\n
 # Для регистрации друга обратитесь к @naya_vokhidova\n\nЖдем Вас {date} в {time} по адресу {address}."""
     await message.reply(message_text, reply_markup=base_markup)
-    report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
+    report_text = f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nФИО: {message.from_user.full_name}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Form.start.set()
@@ -160,7 +160,6 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     participants_wrapped = []
     for num, nickname in enumerate(processed_nicks, 1):
         participants_wrapped.append(f"{num}. {nickname}")
-    # participants_wrapped = "\n".join(participants_wrapped)
     participants_wrapped = "```\n\n" + "\n".join(participants_wrapped) + "```"
     participants_wrapped = "\n\nЗарегистрированные участники:\n" + participants_wrapped
     empty_places = f"\n\nСвободных мест: {get_max_number() - len(participants)}"
