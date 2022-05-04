@@ -4,65 +4,6 @@ from admin_logic import *
 from utils import process_name
 
 
-def get_max_number():
-    with open("max_number.txt") as file:
-        return int(file.read())
-
-
-@dp.message_handler(state="*", commands='newgame', user_id=[436612042, 334756630])
-async def get_game_settings(message: types.Message):
-    with open("game_info.txt") as file:
-        game_info = file.read()
-    await message.reply("Введите, пожалуйста, новую информацию по следующей игре")
-    await message.reply(game_info, reply_markup=types.ReplyKeyboardRemove())
-    await Form.change_info.set()
-
-
-@dp.message_handler(state="*", commands='maxnumber', user_id=[436612042, 334756630])
-async def get_current_max_number(message: types.Message):
-    max_number = get_max_number()
-    await message.reply(f"Текущее максимальное число игроков {max_number}.\n\nВведите новое максимальное число игроков"
-                        , reply_markup=types.ReplyKeyboardRemove())
-    await Form.max_number.set()
-
-
-@dp.message_handler(state=Form.max_number)
-async def change_max_number(message: types.Message):
-    new_max_number = int(message.text)
-    with open("max_number.txt", "w") as file:
-        file.write(str(new_max_number))
-    await message.reply("Максимальное число игроков успешно изменено", reply_markup=base_markup)
-    await Form.start.set()
-
-
-@dp.message_handler(state=Form.change_info)
-async def change_game_settings(message: types.Message):
-    game_info = message.text
-    with open("game_info.txt", "w") as file:
-        file.write(game_info)
-    await message.reply("Информация по игре успешно перезаписана", reply_markup=base_markup)
-    await Form.start.set()
-
-
-@dp.message_handler(state="*", commands='reset', user_id=[436612042, 334756630])
-async def reset_registration(message: types.Message):
-    await message.reply("Вы уверены, что хотите обнулить регистрацию?", reply_markup=yes_no_markup)
-    await Form.reset.set()
-
-
-@dp.message_handler(lambda message: message.text == YES_BUTTON, state=Form.reset)
-async def reset_registration_for_sure(message: types.Message):
-    db.clear()
-    await message.reply("Бот готов для регистрации участников на следующую игру", reply_markup=base_markup)
-    await Form.start.set()
-
-
-@dp.message_handler(lambda message: message.text == NO_BUTTON, state=Form.reset)
-async def cancel_reset_registration(message: types.Message):
-    await Form.start.set()
-    await message.reply("Ок, возвращаемся в главное меню.", reply_markup=base_markup)
-
-
 @dp.message_handler(state=None)
 async def cmd_start(message: types.Message):
     await Form.start.set()

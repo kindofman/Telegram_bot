@@ -20,6 +20,7 @@ def create_inline_buttons(
         action: Callable,
         trigger_button: str,
         state: State,
+        markup: types.ReplyKeyboardMarkup,
         reply_message: str = ".",
 ):
     async def process_trigger(message: types.Message):
@@ -42,9 +43,12 @@ def create_inline_buttons(
         action(nickname=nickname)
         await bot.send_message(
             callback_query.from_user.id,
-            f"""Действие для игрока "{nickname}" выполнено.""", reply_markup=admin_markup
+            f"""Действие для игрока "{nickname}" выполнено.""", reply_markup=markup
         )
-        await Form.admin.set()
 
     dp.message_handler(lambda message: message.text == trigger_button, state=state)(process_trigger)
     dp.callback_query_handler(lambda c: c.data.endswith(identifier), state=state)(process_callback)
+
+def get_max_number():
+    with open("max_number.txt") as file:
+        return int(file.read())

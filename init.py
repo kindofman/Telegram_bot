@@ -20,9 +20,11 @@ class Form(StatesGroup):
     reset = State()
     register_player = State()
     admin = State()
-    mailing = State()
-    print_players = State()
-    mailing_all = State()
+    # mailing = State()
+    # print_players = State()
+    # mailing_all = State()
+    new_game = State()
+    players = State()
 
 
 parser = argparse.ArgumentParser(description='Mafia bot')

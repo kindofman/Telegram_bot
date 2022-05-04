@@ -10,8 +10,8 @@ YES_BUTTON = "Да ✅"
 NO_BUTTON = "Нет ❌"
 MAILING_BUTTON = "Рассылка"
 VIEW_SUBSCRIBERS_BUTTON = "Кто подписался?"
-ADD_PLAYER_BUTTON = "Добавить игрока‍"
-REMOVE_PLAYER_BUTTON = "Убрать игрока"
+ADD_PLAYER_BUTTON = "Добавить‍"
+REMOVE_PLAYER_BUTTON = "Убрать"
 EXIT_ADMIN_BUTTON = "Выйти из админских кнопок ✈️"
 VIEW_PLAYERS_BUTTON = "Список игроков"
 MAILING_ALL_BUTTON = "Рассылка всем"
@@ -21,6 +21,13 @@ VOTE_BUTTON = "Голосование 🙋🏻"
 BOARD_GAMES_BUTTON = "Настолки 🎲"
 PAYMENT_VERIFIED_BUTTON = "Оплачено?"
 NEWBY_STATE_BUTTON = "Новый игрок"
+NEW_GAME_BUTTON = "Новая игра"
+PLAYERS_BUTTON = "Регистрация"
+ADMIN_MAFIA_BUTTON = "Мафия"
+ADMIN_SPY_BUTTON = "Шпион"
+INFO_BUTTON = "Инфо"
+MAX_PLAYERS_BUTTON = "Кол-во игроков"
+RESET_BUTTON = "Обнулить регистрацию"
 
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
@@ -41,15 +48,23 @@ yes_no_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, 
 yes_no_markup.add(YES_BUTTON, NO_BUTTON)
 
 admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-# admin_markup.row(MAILING_BUTTON, VIEW_SUBSCRIBERS_BUTTON)
-# admin_markup.row(VIEW_PLAYERS_BUTTON, MAILING_ALL_BUTTON)
-admin_markup.row(NEWBY_STATE_BUTTON, PAYMENT_VERIFIED_BUTTON)
-admin_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
+admin_markup.row(NEW_GAME_BUTTON, PLAYERS_BUTTON)
+admin_markup.row(ADMIN_MAFIA_BUTTON, ADMIN_SPY_BUTTON)
 admin_markup.add(EXIT_ADMIN_BUTTON)
 
-# info_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-# info_markup.add(NEAREST_GAME_BUTTON)
-# info_markup.row(RULES_BUTTON, GESTURES_BUTTON)
+new_game_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+new_game_markup.row(INFO_BUTTON, MAX_PLAYERS_BUTTON)
+new_game_markup.row(RESET_BUTTON, CANCEL_BUTTON)
+
+players_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+players_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
+players_markup.row(PAYMENT_VERIFIED_BUTTON, NEWBY_STATE_BUTTON)
+players_markup.add(CANCEL_BUTTON)
+
+# admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+# admin_markup.row(NEWBY_STATE_BUTTON, PAYMENT_VERIFIED_BUTTON)
+# admin_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
+# admin_markup.add(EXIT_ADMIN_BUTTON)
 
 
 
