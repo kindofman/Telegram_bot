@@ -79,7 +79,7 @@ class SQLighter:
                                                       WHERE current_game.telegram_id = players.telegram_id
                                                           AND current_game.nickname_lowered = players.nickname_lowered)
                                                       AND current_game.telegram_id != -1
-                                                      AND current_game.paid = 1""").fetchall()
+                                                      AND current_game.status != 0""").fetchall()
             for telegram_id, nickname_lowered in new_players:
                 self.cursor.execute(f"""INSERT INTO players VALUES
                                         ({telegram_id}, '{nickname_lowered}', {int(time.time())}, 0)""")
