@@ -50,5 +50,5 @@ def create_inline_buttons(
     dp.callback_query_handler(lambda c: c.data.endswith(identifier), state=state)(process_callback)
 
 def get_max_number():
-    with open("max_number.txt") as file:
+    with open("files/max_number.txt") as file:
         return int(file.read())

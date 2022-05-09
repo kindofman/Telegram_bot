@@ -129,7 +129,7 @@ async def process_players_button(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == INFO_BUTTON, state=Form.new_game)
 async def get_game_settings(message: types.Message):
-    with open("game_info.txt") as file:
+    with open("files/game_info.txt") as file:
         game_info = file.read()
     await message.reply("Введите, пожалуйста, новую информацию по следующей игре")
     await message.reply(game_info, reply_markup=types.ReplyKeyboardRemove())
@@ -139,7 +139,7 @@ async def get_game_settings(message: types.Message):
 @dp.message_handler(state=Form.change_info)
 async def change_game_settings(message: types.Message):
     game_info = message.text
-    with open("game_info.txt", "w") as file:
+    with open("files/game_info.txt", "w") as file:
         file.write(game_info)
     await message.reply("Информация по игре успешно перезаписана", reply_markup=new_game_markup)
     await Form.new_game.set()
@@ -156,7 +156,7 @@ async def get_current_max_number(message: types.Message):
 @dp.message_handler(state=Form.max_number)
 async def change_max_number(message: types.Message):
     new_max_number = int(message.text)
-    with open("max_number.txt", "w") as file:
+    with open("files/max_number.txt", "w") as file:
         file.write(str(new_max_number))
     await message.reply("Максимальное число игроков успешно изменено", reply_markup=new_game_markup)
     await Form.new_game.set()

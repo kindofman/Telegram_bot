@@ -1,6 +1,4 @@
 *.ipynb
-*.pkl
 __pycache__/
 *.txt
-server_info
 *.db

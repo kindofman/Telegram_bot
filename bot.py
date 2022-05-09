@@ -68,7 +68,7 @@ async def cancel_registration(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.nickname)
 async def process_name_stage(message: types.Message, state: FSMContext):
-    with open("game_info.txt") as file:
+    with open("files/game_info.txt") as file:
         game_info = file.read()
     db.register_player(message.text.replace("/", ""), message.from_user.id)
     players_cnt = db.count_registered_players()
@@ -94,7 +94,7 @@ async def process_mafia(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == NEAREST_GAME_BUTTON, state=Form.start)
 async def get_next_game_info(message: types.Message, state: FSMContext):
-    with open("game_info.txt") as file:
+    with open("files/game_info.txt") as file:
         game_info = file.read()
     participants, status = db.get_registered_players()
     processed_nicks = [process_name(nick, s) for nick, s in zip(participants, status)]
@@ -114,7 +114,7 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text == GESTURES_BUTTON, state=Form.mafia)
 async def get_gestures(message: types.Message, state: FSMContext):
-    await message.reply_photo(open("gestures.png", 'rb'), reply_markup=mafia_markup)
+    await message.reply_photo(open("files/gestures.png", 'rb'), reply_markup=mafia_markup)
 
 
 @dp.message_handler(lambda message: message.text == RULES_BUTTON, state=Form.mafia)
@@ -122,7 +122,7 @@ async def get_rules(message: types.Message, state: FSMContext):
     """
     max length of message is 4096
     """
-    with open("rules.txt") as f:
+    with open("files/rules.txt") as f:
         rules = f.read()
     await message.reply(rules, parse_mode="Markdown", reply_markup=mafia_markup)
 
