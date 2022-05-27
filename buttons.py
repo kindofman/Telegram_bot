@@ -16,7 +16,7 @@ EXIT_ADMIN_BUTTON = "Выйти из админских кнопок ✈️"
 VIEW_PLAYERS_BUTTON = "Список игроков"
 MAILING_ALL_BUTTON = "Рассылка всем"
 MAFIA_BUTTON = "Мафия 🕵🏻"
-SPY_BUTTON = "Шпион 👀"
+PLAYER_SPY_BUTTON = "Шпион 👀"
 VOTE_BUTTON = "Голосование 🙋🏻"
 BOARD_GAMES_BUTTON = "Настолки 🎲"
 PAYMENT_VERIFIED_BUTTON = "Оплачено?"
@@ -28,6 +28,10 @@ ADMIN_SPY_BUTTON = "Шпион"
 INFO_BUTTON = "Инфо"
 MAX_PLAYERS_BUTTON = "Кол-во игроков"
 RESET_BUTTON = "Обнулить регистрацию"
+START_BUTTON = "Старт"
+STOP_BUTTON = "Стоп"
+REPEAT_BUTTON = "Повторить раздачу"
+GET_CARD_BUTTON = "Получить карту"
 
 
 base_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
@@ -40,6 +44,13 @@ nearest_game_markup.row(REGISTRATION_BUTTON, CANCEL_BUTTON)
 mafia_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 mafia_markup.row(RULES_BUTTON, GESTURES_BUTTON)
 mafia_markup.row(VOTE_BUTTON, CANCEL_BUTTON)
+
+board_games_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+board_games_markup.add(PLAYER_SPY_BUTTON)
+board_games_markup.add(CANCEL_BUTTON)
+
+player_spy_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+player_spy_markup.row(GET_CARD_BUTTON, CANCEL_BUTTON)
 
 cancel_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 cancel_markup.add(CANCEL_BUTTON)
@@ -61,10 +72,9 @@ players_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
 players_markup.row(PAYMENT_VERIFIED_BUTTON, NEWBY_STATE_BUTTON)
 players_markup.add(CANCEL_BUTTON)
 
-# admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-# admin_markup.row(NEWBY_STATE_BUTTON, PAYMENT_VERIFIED_BUTTON)
-# admin_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)
-# admin_markup.add(EXIT_ADMIN_BUTTON)
+admin_spy_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+admin_spy_markup.row(START_BUTTON, STOP_BUTTON)
+admin_spy_markup.add(REPEAT_BUTTON, CANCEL_BUTTON)
 
 
 

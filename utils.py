@@ -1,8 +1,32 @@
-from buttons import admin_markup
+from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types
-from aiogram.dispatcher.filters.state import State
-from init import dp, db, bot, Form
+from init import dp, db, bot
 from typing import Callable
+
+
+# States
+class Player(StatesGroup):
+    start = State()
+    nickname = State()  # Will be represented in storage as 'Form:nickname'
+    unregister = State()
+    nearest_game = State()
+    mafia = State()
+    board_games = State()
+    spy = State()
+
+class Admin(StatesGroup):
+    change_info = State()
+    max_number = State()
+    reset = State()
+    register_player = State()
+    main = State()
+    # mailing = State()
+    # print_players = State()
+    # mailing_all = State()
+    new_game = State()
+    players = State()
+    spy = State()
+    spy_num_players = State()
 
 
 def process_name(name, status):
@@ -12,7 +36,7 @@ def process_name(name, status):
         suffix = " ✅"
     elif status == 2:
         suffix = " 🆕"
-    return f"{name:{19}}{suffix}"
+    return f"{name:{20}}{suffix}"
 
 def create_inline_buttons(
         allowed_statuses: list,
@@ -48,6 +72,7 @@ def create_inline_buttons(
 
     dp.message_handler(lambda message: message.text == trigger_button, state=state)(process_trigger)
     dp.callback_query_handler(lambda c: c.data.endswith(identifier), state=state)(process_callback)
+
 
 def get_max_number():
     with open("files/max_number.txt") as file:

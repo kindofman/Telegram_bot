@@ -1,30 +1,12 @@
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.contrib.fsm_storage.redis import RedisStorage2
+
 
 import argparse
 from sqlighter import SQLighter
 import config
 import logging
-
-
-# States
-class Form(StatesGroup):
-    start = State()
-    nickname = State()  # Will be represented in storage as 'Form:nickname'
-    unregister = State()
-    nearest_game = State()
-    mafia = State()
-    change_info = State()
-    max_number = State()
-    reset = State()
-    register_player = State()
-    admin = State()
-    # mailing = State()
-    # print_players = State()
-    # mailing_all = State()
-    new_game = State()
-    players = State()
+from aioredis import Redis
 
 
 parser = argparse.ArgumentParser(description='Mafia bot')
@@ -35,6 +17,7 @@ API_TOKEN = config.API_TOKEN_TEST if args.purpose == "test" else config.API_TOKE
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
-storage = MemoryStorage()
+storage = RedisStorage2()
+redis = Redis()
 dp = Dispatcher(bot, storage=storage)
 db = SQLighter("files/database.db")

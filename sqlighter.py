@@ -141,5 +141,29 @@ class SQLighter:
                 f"""UPDATE current_game SET status = {new_status} WHERE nickname = '{nickname}'"""
             )
 
+    def add_spy_player(self, telegram_id):
+        with self.connection:
+            return self.cursor.execute(f"""INSERT INTO spy VALUES ({telegram_id}, {int(time.time())})""")
+
+    def spy_player_exists(self, telegram_id):
+        with self.connection:
+            result = self.cursor.execute(f"""SELECT EXISTS (SELECT * FROM spy 
+                                                          WHERE telegram_id = {telegram_id}) """).fetchall()[0][0]
+            return bool(result)
+
+    def count_spy_players(self):
+        with self.connection:
+            return self.cursor.execute("""SELECT count(*) FROM spy""").fetchall()[0][0]
+
+    def get_spy_players(self):
+        with self.connection:
+            rows = self.cursor.execute("SELECT telegram_id FROM spy").fetchall()
+            players = [r[0] for r in rows]
+            return players
+
+    def clear_spy_table(self):
+        with self.connection:
+            self.cursor.execute("DELETE FROM spy")
+
     def close(self):
         self.connection.close()
