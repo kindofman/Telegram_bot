@@ -1,5 +1,4 @@
 *.ipynb
 __pycache__/
-*.txt
 *.db
 *.rdb
