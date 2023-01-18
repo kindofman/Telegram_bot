@@ -6,6 +6,9 @@ from init import bot
 from spy import deal_cards, PLAYERS_NUM
 
 
+LIMIT_NICKNAME = 15
+
+
 @dp.message_handler(state=None)
 async def cmd_start(message: types.Message):
     await Player.start.set()
@@ -72,7 +75,8 @@ async def cancel_registration(message: types.Message):
 async def process_name_stage(message: types.Message):
     with open("files/game_info.txt") as file:
         game_info = file.read()
-    db.register_player(message.text.replace("/", ""), message.from_user.id)
+    nickname = message.text.replace("/", "")[:LIMIT_NICKNAME]
+    db.register_player(nickname, message.from_user.id)
     players_cnt = db.count_registered_players()
 
     date = game_info.split("\n")[0].split(maxsplit=1)[1]

@@ -36,8 +36,6 @@ def process_name(name, status):
         suffix = " ✅"
     elif status == 2:
         suffix = " 🆕"
-    if len(name) > 15:
-        return "некорректный никнейм"
     return f"{name:{20}}{suffix}"
 
 def create_inline_buttons(
