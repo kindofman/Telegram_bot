@@ -3,7 +3,7 @@ from aiogram import Bot
 from aioredis import Redis
 import os
 
-from init import redis
+from loader import redis
 
 
 """
