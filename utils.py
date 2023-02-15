@@ -1,6 +1,6 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types
-from init import dp, db, bot
+from loader import dp, db, bot
 from typing import Callable
 
 
