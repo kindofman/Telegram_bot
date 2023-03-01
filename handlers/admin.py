@@ -111,8 +111,12 @@ async def create_game_for_date(message: types.Message):
 
 async def change_game(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
-    await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
-    await Admin.change_game.set()
+    if existing_games:
+        await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
+        await Admin.change_game.set()
+    else:
+        await message.reply(f"Открытых игр нет.", reply_markup=new_game_markup)
+        await Admin.new_game.set()
 
 
 async def change_game_for_date(message: types.Message, state: FSMContext):
