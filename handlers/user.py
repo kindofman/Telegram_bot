@@ -59,7 +59,7 @@ async def unregister(message: types.Message, state: FSMContext):
     await db_wrapper.remove_player_by_id(date, message.from_user.id)
     players_cnt = len(players) - 1
     await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {player.nick}! :(", reply_markup=base_markup)
-    report_text = f"Игрок снялся с регистрации.\n\nНикнейм: {player.nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
+    report_text = f"Игрок снялся с регистрации на {date}.\n\nНикнейм: {player.nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Player.start.set()
@@ -88,7 +88,7 @@ async def process_name_stage(message: types.Message, state: FSMContext):
 До встречи на игре 🤗"""
     await message.reply(message_text, reply_markup=base_markup)
     report_text = (
-        f"Игрок зарегистрировался\n\nНикнейм: {message.text}\nФИО: {message.from_user.full_name}\n"
+        f"Игрок зарегистрировался на {date}\n\nНикнейм: {message.text}\nФИО: {message.from_user.full_name}\n"
         f"Username: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
     )
     for user_id in [436612042, 334756630]:
