@@ -9,6 +9,7 @@ from datetime import datetime
 
 
 DATE = "date"
+ADMIN = "Админ"
 DATE_STARTS = "20"
 
 

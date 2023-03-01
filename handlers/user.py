@@ -1,5 +1,5 @@
 from loader import db, bot, redis
-from utils import Player, get_max_number, process_name, DATE, DATE_STARTS
+from utils import Player, process_name, DATE, DATE_STARTS, ADMIN
 from buttons import *
 from spy import deal_cards, PLAYERS_NUM
 import db_wrapper
@@ -192,7 +192,7 @@ def register_user_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(cmd_start, state="*", commands='start')
     dp.register_message_handler(
         process_start_invalid,
-        lambda message: message.text not in [NEAREST_GAME_BUTTON, MAFIA_BUTTON, BOARD_GAMES_BUTTON],
+        lambda message: message.text not in [NEAREST_GAME_BUTTON, MAFIA_BUTTON, BOARD_GAMES_BUTTON, ADMIN],
         state=Player.start,
     )
     dp.register_message_handler(

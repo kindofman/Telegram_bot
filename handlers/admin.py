@@ -11,6 +11,7 @@ from utils import (
     date_to_weekday,
     DATE,
     DATE_STARTS,
+    ADMIN,
 )
 from loader import db, redis, bot
 from buttons import *
@@ -251,7 +252,7 @@ async def process_spy_num_players(message: types.Message):
 
 def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(
-        enter_admin_menu, lambda message: message.text == "Админ", state="*", user_id=[436612042, 334756630],
+        enter_admin_menu, lambda message: message.text == ADMIN, state="*", user_id=[436612042, 334756630],
     )
     dp.register_message_handler(
         return_to_main_menu, lambda message: message.text == EXIT_ADMIN_BUTTON, state=Admin.main,
