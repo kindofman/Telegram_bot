@@ -49,12 +49,17 @@ async def register(message: types.Message, state: FSMContext):
         )
 
 
-async def unregister(message: types.Message):
-    nick = db.get_registered_nickname(message.from_user.id)
-    db.unregister_player(message.from_user.id)
-    players_cnt = db.count_registered_players()
-    await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {nick}! :(", reply_markup=base_markup)
-    report_text = f"Игрок снялся с регистрации.\n\nНикнейм: {nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {get_max_number() - players_cnt}"
+async def unregister(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        date = data[DATE]
+    game = await db_wrapper.get_game(date)
+    players = game[db_wrapper.Game.players]
+    max_players = game[db_wrapper.Game.max_players]
+    player = [p for p in players if p.id == message.from_user.id][0]
+    await db_wrapper.remove_player_by_id(date, message.from_user.id)
+    players_cnt = len(players) - 1
+    await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {player.nick}! :(", reply_markup=base_markup)
+    report_text = f"Игрок снялся с регистрации.\n\nНикнейм: {player.nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
     await Player.start.set()
