@@ -105,7 +105,9 @@ async def process_nearest_game(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
     if existing_games:
         await message.reply(
-            "Выберите дату встречи.", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games])
+            "Выберите дату встречи.", reply_markup=types.ReplyKeyboardMarkup(
+                [[i] for i in existing_games], resize_keyboard=True,
+            )
         )
         await Player.select_date.set()
     else:
