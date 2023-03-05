@@ -1,6 +1,5 @@
 import random
 from aiogram import Bot
-from aioredis import Redis
 import os
 
 from loader import redis

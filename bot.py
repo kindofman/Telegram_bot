@@ -5,8 +5,8 @@ from handlers import register_all_handlers
 from loader import dp
 
 
-async def start_up(dp: Dispatcher) -> None:
-    register_all_handlers(dp)
+async def start_up(dispatcher: Dispatcher) -> None:
+    register_all_handlers(dispatcher)
 
 
 async def shutdown(dispatcher: Dispatcher):

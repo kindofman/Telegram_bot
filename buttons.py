@@ -2,7 +2,7 @@ from aiogram import types
 
 
 REGISTRATION_BUTTON = "Регистрация 📝️‍‍‍"
-NEAREST_GAME_BUTTON = "Ближайшая встреча 📆"
+NEAREST_GAME_BUTTON = "Ближайшие встречи 📆"
 RULES_BUTTON = "Правила игры 👩🏻‍⚖️"
 GESTURES_BUTTON = "Игровые жесты 👌🏼"
 CANCEL_BUTTON = "Назад 🙅🏼"
@@ -22,12 +22,14 @@ BOARD_GAMES_BUTTON = "Настолки 🎲"
 PAYMENT_VERIFIED_BUTTON = "Оплачено?"
 NEWBY_STATE_BUTTON = "Новый игрок"
 NEW_GAME_BUTTON = "Новая игра"
+CREATE_GAME_BUTTON = "Создать игру"
+CHANGE_GAME_BUTTON = "Изменить игру"
 PLAYERS_BUTTON = "Регистрация"
 ADMIN_MAFIA_BUTTON = "Мафия"
 ADMIN_SPY_BUTTON = "Шпион"
 INFO_BUTTON = "Инфо"
 MAX_PLAYERS_BUTTON = "Кол-во игроков"
-RESET_BUTTON = "Обнулить регистрацию"
+RESET_BUTTON = "Удалить игру"
 START_BUTTON = "Старт"
 STOP_BUTTON = "Стоп"
 REPEAT_BUTTON = "Повторить раздачу"
@@ -64,8 +66,13 @@ admin_markup.row(ADMIN_MAFIA_BUTTON, ADMIN_SPY_BUTTON)
 admin_markup.add(EXIT_ADMIN_BUTTON)
 
 new_game_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
-new_game_markup.row(INFO_BUTTON, MAX_PLAYERS_BUTTON)
-new_game_markup.row(RESET_BUTTON, CANCEL_BUTTON)
+new_game_markup.row(CREATE_GAME_BUTTON)
+new_game_markup.row(CHANGE_GAME_BUTTON)
+new_game_markup.row(CANCEL_BUTTON)
+
+change_game_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
+change_game_markup.row(INFO_BUTTON, MAX_PLAYERS_BUTTON)
+change_game_markup.row(RESET_BUTTON, CANCEL_BUTTON)
 
 players_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=False)
 players_markup.row(ADD_PLAYER_BUTTON, REMOVE_PLAYER_BUTTON)

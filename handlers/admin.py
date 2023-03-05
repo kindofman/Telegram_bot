@@ -1,13 +1,28 @@
+import types
+from datetime import datetime, timedelta
+from aiogram.dispatcher import FSMContext
+
+
+import db_wrapper
 from utils import (
     create_inline_buttons,
-    get_max_number,
     Admin,
     Player,
+    date_to_weekday,
+    DATE,
+    DATE_STARTS,
+    ADMIN,
 )
 from loader import db, redis, bot
 from buttons import *
 from aiogram import Dispatcher
-from spy import LOCATIONS_REDIS, PLAYERS_NUM, deal_cards
+from spy import PLAYERS_NUM, deal_cards
+
+
+DAYS_SHOW = 14
+EXISTS = "exists"
+start_kb = types.ReplyKeyboardMarkup(resize_keyboard=True,)
+start_kb.row('Navigation Calendar', 'Dialog Calendar')
 
 
 async def enter_admin_menu(message: types.Message):
@@ -30,37 +45,40 @@ async def register_player(message: types.Message):
     await Admin.register_player.set()
 
 
-async def enter_player_nickname(message: types.Message):
+async def enter_player_nickname(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        date = data[DATE]
     nick = message.text.replace("/", "").replace("|", "")
-    db.register_player(nick)
-    await Admin.players.set()
+    await db_wrapper.add_player_by_nick(date, nick)
+    await Admin.players_for_date.set()
     await message.reply(f'''Игрок "{nick}" успешно зарегистрирован.''', reply_markup=players_markup)
 
 
 create_inline_buttons(
     allowed_statuses=[0, 1, 2],
     identifier="remove",
-    action=db.unregister_player,
+    # action=db.unregister_player,
+    action=db_wrapper.remove_player_by_nick,
     trigger_button=REMOVE_PLAYER_BUTTON,
-    state=Admin.players,
+    state_group=Admin.players_for_date,
     markup=players_markup,
 )
 
 create_inline_buttons(
     allowed_statuses=[0, 1],
     identifier="payment",
-    action=db.change_payment_state,
+    action=db_wrapper.change_payment_state,
     trigger_button=PAYMENT_VERIFIED_BUTTON,
-    state=Admin.players,
+    state_group=Admin.players_for_date,
     markup=players_markup,
 )
 
 create_inline_buttons(
     allowed_statuses=[0, 2],
     identifier="newby",
-    action=db.change_newby_state,
+    action=db_wrapper.change_newby_state,
     trigger_button=NEWBY_STATE_BUTTON,
-    state=Admin.players,
+    state_group=Admin.players_for_date,
     markup=players_markup,
 )
 
@@ -70,50 +88,109 @@ async def process_new_game_button(message: types.Message):
     await Admin.new_game.set()
 
 
+async def create_game(message: types.Message):
+    days_ahead = [(datetime.now().date() + timedelta(i)).isoformat() for i in range(DAYS_SHOW)]
+    existing_games = await db_wrapper.get_all_games()
+    buttons = []
+    for i in range(DAYS_SHOW // 2):
+        left = days_ahead[i] if days_ahead[i] not in existing_games else EXISTS
+        right = days_ahead[(DAYS_SHOW // 2) + i]
+        right = right if right not in existing_games else EXISTS
+        buttons.append([left])
+        buttons[i].append(right)
+    markup = types.ReplyKeyboardMarkup(buttons)
+    await message.reply(f"..", reply_markup=markup)
+    await Admin.create_game.set()
+
+
+async def create_game_for_date(message: types.Message):
+    if message.text.startswith(DATE_STARTS):
+        await db_wrapper.create_game(message.text)
+        await message.reply(f"Игра на дату {message.text} создана.", reply_markup=new_game_markup)
+    await Admin.new_game.set()
+
+
+async def change_game(message: types.Message):
+    existing_games = await db_wrapper.get_all_games()
+    if existing_games:
+        await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
+        await Admin.change_game.set()
+    else:
+        await message.reply(f"Открытых игр нет.", reply_markup=new_game_markup)
+        await Admin.new_game.set()
+
+
+async def change_game_for_date(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['date'] = message.text
+    weekday = date_to_weekday(message.text)
+    await message.reply(f"Изменяем игру на дату: {message.text}, {weekday}", reply_markup=change_game_markup)
+    await Admin.change_game_for_date.set()
+
+
+async def process_new_game_button(message: types.Message):
+    await message.reply(f"..", reply_markup=new_game_markup)
+    await Admin.new_game.set()
+
+
 async def process_players_button(message: types.Message):
-    await message.reply("..", reply_markup=players_markup)
+    existing_games = await db_wrapper.get_all_games()
+    await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
     await Admin.players.set()
 
 
-async def get_game_settings(message: types.Message):
-    with open("files/game_info.txt") as file:
-        game_info = file.read()
+async def set_date_for_players(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data[DATE] = message.text
+    await message.reply(f"Регистрация на {message.text}.", reply_markup=players_markup)
+    await Admin.players_for_date.set()
+
+
+async def get_game_settings(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        date = data[DATE]
+    game_info = await db_wrapper.get_info(date)
     await message.reply("Введите, пожалуйста, новую информацию по следующей игре")
     await message.reply(game_info, reply_markup=types.ReplyKeyboardRemove())
     await Admin.change_info.set()
 
 
-async def change_game_settings(message: types.Message):
+async def change_game_settings(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        date = data[DATE]
     game_info = message.text
-    with open("files/game_info.txt", "w") as file:
-        file.write(game_info)
-    await message.reply("Информация по игре успешно перезаписана", reply_markup=new_game_markup)
-    await Admin.new_game.set()
+    await db_wrapper.change_info(date, game_info)
+    await message.reply("Информация по игре успешно перезаписана", reply_markup=change_game_markup)
+    await Admin.change_game_for_date.set()
 
 
-async def get_current_max_number(message: types.Message):
-    max_number = get_max_number()
+async def get_current_max_number(message: types.Message, state: FSMContext):
+    date = (await state.get_data())[DATE]
+    max_number = await db_wrapper.get_max_players(date)
     await message.reply(f"Текущее максимальное число игроков {max_number}.\n\nВведите новое максимальное число игроков"
                         , reply_markup=types.ReplyKeyboardRemove())
     await Admin.max_number.set()
 
 
-async def change_max_number(message: types.Message):
+async def change_max_number(message: types.Message, state: FSMContext):
     new_max_number = int(message.text)
-    with open("files/max_number.txt", "w") as file:
-        file.write(str(new_max_number))
-    await message.reply("Максимальное число игроков успешно изменено", reply_markup=new_game_markup)
-    await Admin.new_game.set()
+    date = (await state.get_data())[DATE]
+    await db_wrapper.change_max_players(date, new_max_number)
+    await message.reply("Максимальное число игроков успешно изменено", reply_markup=change_game_markup)
+    await Admin.change_game_for_date.set()
 
 
 async def reset_registration(message: types.Message):
-    await message.reply("Вы уверены, что хотите обнулить регистрацию?", reply_markup=yes_no_markup)
+    await message.reply("Вы уверены, что хотите удалить игру?", reply_markup=yes_no_markup)
     await Admin.reset.set()
 
 
-async def reset_registration_for_sure(message: types.Message):
-    db.clear()
-    await message.reply("Бот готов для регистрации участников на следующую игру", reply_markup=new_game_markup)
+async def reset_registration_for_sure(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        date = data[DATE]
+
+    await db_wrapper.delete_game(date)
+    await message.reply(f"Игра на {date} удалена.", reply_markup=new_game_markup)
     await Admin.new_game.set()
 
 
@@ -175,39 +252,41 @@ async def process_spy_num_players(message: types.Message):
 
 def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(
-        enter_admin_menu, lambda message: message.text == "Админ", state="*", user_id=[436612042, 334756630],
+        enter_admin_menu, lambda message: message.text == ADMIN, state="*", user_id=[436612042, 334756630],
     )
     dp.register_message_handler(
         return_to_main_menu, lambda message: message.text == EXIT_ADMIN_BUTTON, state=Admin.main,
     )
     dp.register_message_handler(
-        return_to_admin_menu, lambda message: message.text == CANCEL_BUTTON, state=[Admin.players, Admin.new_game],
+        return_to_admin_menu, lambda message: message.text == CANCEL_BUTTON, state=[
+            Admin.players_for_date, Admin.new_game, Admin.change_game_for_date],
     )
     dp.register_message_handler(
-        register_player, lambda message: message.text == ADD_PLAYER_BUTTON, state=Admin.players,
+        register_player, lambda message: message.text == ADD_PLAYER_BUTTON, state=Admin.players_for_date,
     )
     dp.register_message_handler(enter_player_nickname, state=Admin.register_player)
     dp.register_message_handler(
         process_new_game_button, lambda message: message.text == NEW_GAME_BUTTON, state=Admin.main,
     )
+    dp.register_message_handler(create_game, lambda message: message.text == CREATE_GAME_BUTTON, state=Admin.new_game)
     dp.register_message_handler(
         process_players_button, lambda message: message.text == PLAYERS_BUTTON, state=Admin.main,
     )
     dp.register_message_handler(
-        get_game_settings, lambda message: message.text == INFO_BUTTON, state=Admin.new_game,
+        get_game_settings, lambda message: message.text == INFO_BUTTON, state=Admin.change_game_for_date,
     )
     dp.register_message_handler(change_game_settings, state=Admin.change_info)
     dp.register_message_handler(
-        get_current_max_number, lambda message: message.text == MAX_PLAYERS_BUTTON, state=Admin.new_game,
+        get_current_max_number, lambda message: message.text == MAX_PLAYERS_BUTTON, state=Admin.change_game_for_date,
     )
     dp.register_message_handler(change_max_number, state=Admin.max_number)
-    dp.register_message_handler(reset_registration, lambda message: message.text == RESET_BUTTON, state=Admin.new_game)
+    dp.register_message_handler(reset_registration, lambda message: message.text == RESET_BUTTON, state=Admin.change_game_for_date)
     dp.register_message_handler(
         reset_registration_for_sure, lambda message: message.text == YES_BUTTON, state=Admin.reset,
     )
     dp.register_message_handler(no_reset_registration, lambda message: message.text == NO_BUTTON, state=Admin.reset)
     dp.register_message_handler(
-        cancel_reset_registration, lambda message: message.text == CANCEL_BUTTON, state=Admin.players,
+        cancel_reset_registration, lambda message: message.text == CANCEL_BUTTON, state=Admin.players_for_date,
     )
     dp.register_message_handler(process_spy_button, lambda message: message.text == ADMIN_SPY_BUTTON, state=Admin.main)
     dp.register_message_handler(process_spy_start, lambda message: message.text == START_BUTTON, state=Admin.spy)
@@ -218,4 +297,11 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(process_spy_repeat, lambda message: message.text == REPEAT_BUTTON, state=Admin.spy)
     dp.register_message_handler(process_return_spy, lambda message: message.text == CANCEL_BUTTON, state=Admin.spy)
     dp.register_message_handler(process_spy_num_players, state=Admin.spy_num_players)
+    dp.register_message_handler(create_game_for_date, state=Admin.create_game)
+    dp.register_message_handler(change_game, lambda message: message.text == CHANGE_GAME_BUTTON, state=Admin.new_game)
+    dp.register_message_handler(
+        change_game_for_date,  state=Admin.change_game,
+    )
+    dp.register_message_handler(
+        set_date_for_players, lambda message: message.text.startswith(DATE_STARTS), state=Admin.players)
 
