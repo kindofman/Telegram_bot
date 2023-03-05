@@ -3,7 +3,7 @@ from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 
 import argparse
-from sqlighter import SQLighter
+from databases.sqlighter import SQLighter
 import config
 import logging
 from aioredis import Redis

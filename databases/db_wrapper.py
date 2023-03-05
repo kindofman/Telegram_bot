@@ -1,10 +1,10 @@
 from loader import redis
 
 import json
-from typing import List, Dict
+from typing import List, Dict, Optional
 from enum import Enum
 from dataclasses import dataclass
-from utils import date_to_info
+from common.utils import date_to_info
 
 
 class Game:
@@ -84,9 +84,11 @@ async def get_all_games() -> List[str]:
     return list(games)
 
 
-async def get_game(date: str) -> Dict:
+async def get_game(date: str) -> Optional[Dict]:
     games = await load_games()
-    return games[date]
+    if date in games:
+        return games[date]
+    return None
 
 
 async def add_player_by_nick(date: str, nick: str):

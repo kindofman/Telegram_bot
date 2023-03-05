@@ -2,15 +2,13 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-import db_wrapper
-from loader import dp, db, bot
+from databases import db_wrapper
+from loader import dp, bot
 from typing import Callable
-from datetime import datetime
 
 
 DATE = "date"
 ADMIN = "Админ"
-DATE_STARTS = "20"
 
 
 # States
@@ -89,29 +87,17 @@ def create_inline_buttons(
     dp.register_message_handler(process_trigger, lambda message: message.text == trigger_button, state=state_group)
     dp.callback_query_handler(lambda c: c.data.endswith(identifier), state=state_group)(process_callback)
 
-def date_to_weekday(date: str):
-    weekday = datetime.strptime(date, '%Y-%m-%d').isoweekday()
-    return ["пн", "вт", "ср", "чт", "пт", "сб", "вс"][weekday - 1]
-
 
 def date_to_info(date: str):
-    date = datetime.strptime(date, '%Y-%m-%d')
-    weekday = date.isoweekday()
-    insertion_weekday = [
-        "в понедельник", "во вторник", "в среду", "в четверг", "в пятницу", "в субботу", "в воскресение",
-    ][weekday - 1]
-    insertion_month = [
-        'января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'
-    ][date.month - 1]
-
-    return f"""Спортивка {insertion_weekday}, {date.day} {insertion_month}
+    preposition = "во" if date.startswith("вторник") else "в"
+    weekdays = ["понедельник,", "вторник,", "среду,", "четверг,", "пятницу,", "субботу,", "воскресение,"]
+    weekday, day, month = date.split()
+    for w in weekdays:
+        if w[:3] == weekday[:3]:
+            weekday = w
+    return f"""Спортивка {preposition} {weekday} {day} {month}
 ⏳ Старт стола - 19:00
 🧭 Место: Моховая 10 (вход с Литейного 11)
 💸 Стоимость: 400₽
 🕴️Ведущая: Селена 💪🏻"""
-
-
-def get_max_number():
-    with open("files/max_number.txt") as file:
-        return int(file.read())
 

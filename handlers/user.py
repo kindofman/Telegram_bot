@@ -1,8 +1,8 @@
 from loader import db, bot, redis
-from utils import Player, process_name, DATE, DATE_STARTS, ADMIN
+from common.utils import Player, process_name, DATE, ADMIN
 from buttons import *
 from spy import deal_cards, PLAYERS_NUM
-import db_wrapper
+from databases import db_wrapper
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -13,12 +13,18 @@ LIMIT_NICKNAME = 15
 
 async def start_menu(message: types.Message):
     await Player.start.set()
-    await message.reply("""Добро пожаловать в Клуб Мафии "Castellano"! Что Вас интересует?""", reply_markup=base_markup)
+    await message.reply("""Добро пожаловать в Клуб интеллектуальных игр Castellano!
+
+Что Вас интересует?
+""", reply_markup=base_markup)
 
 
 async def cmd_start(message: types.Message):
     await Player.start.set()
-    await message.reply("""Добро пожаловать в Клуб Мафии "Castellano"! Что Вас интересует?""", reply_markup=base_markup)
+    await message.reply("""Добро пожаловать в Клуб интеллектуальных игр Castellano!
+
+Что Вас интересует?
+""", reply_markup=base_markup)
 
 
 async def process_start_invalid(message: types.Message):
@@ -45,7 +51,7 @@ async def register(message: types.Message, state: FSMContext):
     else:
         await Player.nickname.set()
         await message.reply(
-            "Для регистрации впишите, пожалуйста, свой ник.", reply_markup=cancel_markup,
+            "Для регистрации впишите, пожалуйста, свой никнейм.", reply_markup=cancel_markup,
         )
 
 
@@ -58,7 +64,9 @@ async def unregister(message: types.Message, state: FSMContext):
     player = [p for p in players if p.id == message.from_user.id][0]
     await db_wrapper.remove_player_by_id(date, message.from_user.id)
     players_cnt = len(players) - 1
-    await message.reply(f"Снятие с регистрации прошло успешно.\nБез Вас будет скучно, {player.nick}! :(", reply_markup=base_markup)
+    await message.reply(
+        f"Понял, снял с регистрации.\nНадеюсь, что Вы посетите нас на следующих играх 😊", reply_markup=base_markup,
+    )
     report_text = f"Игрок снялся с регистрации на {date}.\n\nНикнейм: {player.nick}\nUsername: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
     for user_id in [436612042, 334756630]:
         await bot.send_message(user_id, report_text)
@@ -83,12 +91,11 @@ async def process_name_stage(message: types.Message, state: FSMContext):
     game = await db_wrapper.get_game(date)
     players_cnt = len(game[db_wrapper.Game.players])
     max_players = game[db_wrapper.Game.max_players]
-    message_text = f"""Рады знакомству, {message.text}!
-
-До встречи на игре 🤗"""
+    message_text = f"""Сделано!
+До встречи на игре, {message.text} 🤗"""
     await message.reply(message_text, reply_markup=base_markup)
     report_text = (
-        f"Игрок зарегистрировался на {date}\n\nНикнейм: {message.text}\nФИО: {message.from_user.full_name}\n"
+        f"Игрок зарегистрировался, {date}\n\nНикнейм: {message.text}\nФИО: {message.from_user.full_name}\n"
         f"Username: @{message.from_user.username}\n\nСвободных мест: {max_players - players_cnt}"
     )
     for user_id in [436612042, 334756630]:
@@ -119,6 +126,10 @@ async def get_next_game_info(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data[DATE] = date
     game = await db_wrapper.get_game(date)
+    if game is None:
+        await message.reply("Вы точно нажали кнопку?🧐", reply_markup=base_markup)
+        await Player.start.set()
+
     game_info = game[db_wrapper.Game.info]
     players = game[db_wrapper.Game.players]
     participants_wrapped = []
@@ -212,9 +223,7 @@ def register_user_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(
         process_nearest_game, lambda message: message.text == NEAREST_GAME_BUTTON, state=Player.start,
     )
-    dp.register_message_handler(
-        get_next_game_info, lambda message: message.text.startswith(DATE_STARTS), state=Player.select_date,
-    )
+    dp.register_message_handler(get_next_game_info, state=Player.select_date)
     dp.register_message_handler(get_gestures, lambda message: message.text == GESTURES_BUTTON, state=Player.mafia)
     dp.register_message_handler(get_rules, lambda message: message.text == RULES_BUTTON, state=Player.mafia)
     dp.register_message_handler(start_voting, lambda message: message.text == VOTE_BUTTON, state=Player.mafia)

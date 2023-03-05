@@ -1,16 +1,13 @@
 import types
-from datetime import datetime, timedelta
 from aiogram.dispatcher import FSMContext
 
-
-import db_wrapper
-from utils import (
+from databases import db_wrapper
+from common.time_utils import get_dates_ahead, is_date_button
+from common.utils import (
     create_inline_buttons,
     Admin,
     Player,
-    date_to_weekday,
     DATE,
-    DATE_STARTS,
     ADMIN,
 )
 from loader import db, redis, bot
@@ -57,7 +54,6 @@ async def enter_player_nickname(message: types.Message, state: FSMContext):
 create_inline_buttons(
     allowed_statuses=[0, 1, 2],
     identifier="remove",
-    # action=db.unregister_player,
     action=db_wrapper.remove_player_by_nick,
     trigger_button=REMOVE_PLAYER_BUTTON,
     state_group=Admin.players_for_date,
@@ -89,7 +85,7 @@ async def process_new_game_button(message: types.Message):
 
 
 async def create_game(message: types.Message):
-    days_ahead = [(datetime.now().date() + timedelta(i)).isoformat() for i in range(DAYS_SHOW)]
+    days_ahead = get_dates_ahead(DAYS_SHOW)
     existing_games = await db_wrapper.get_all_games()
     buttons = []
     for i in range(DAYS_SHOW // 2):
@@ -104,9 +100,8 @@ async def create_game(message: types.Message):
 
 
 async def create_game_for_date(message: types.Message):
-    if message.text.startswith(DATE_STARTS):
-        await db_wrapper.create_game(message.text)
-        await message.reply(f"Игра на дату {message.text} создана.", reply_markup=new_game_markup)
+    await db_wrapper.create_game(message.text)
+    await message.reply(f"Игра на дату {message.text} создана.", reply_markup=new_game_markup)
     await Admin.new_game.set()
 
 
@@ -123,8 +118,7 @@ async def change_game(message: types.Message):
 async def change_game_for_date(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['date'] = message.text
-    weekday = date_to_weekday(message.text)
-    await message.reply(f"Изменяем игру на дату: {message.text}, {weekday}", reply_markup=change_game_markup)
+    await message.reply(f"{message.text}", reply_markup=change_game_markup)
     await Admin.change_game_for_date.set()
 
 
@@ -297,11 +291,13 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(process_spy_repeat, lambda message: message.text == REPEAT_BUTTON, state=Admin.spy)
     dp.register_message_handler(process_return_spy, lambda message: message.text == CANCEL_BUTTON, state=Admin.spy)
     dp.register_message_handler(process_spy_num_players, state=Admin.spy_num_players)
-    dp.register_message_handler(create_game_for_date, state=Admin.create_game)
+    dp.register_message_handler(
+        create_game_for_date, lambda message: is_date_button(message.text), state=Admin.create_game,
+    )
     dp.register_message_handler(change_game, lambda message: message.text == CHANGE_GAME_BUTTON, state=Admin.new_game)
     dp.register_message_handler(
         change_game_for_date,  state=Admin.change_game,
     )
     dp.register_message_handler(
-        set_date_for_players, lambda message: message.text.startswith(DATE_STARTS), state=Admin.players)
+        set_date_for_players, lambda message: is_date_button(message.text), state=Admin.players)
 
