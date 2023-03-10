@@ -90,7 +90,7 @@ def create_inline_buttons(
 
 def date_to_info(date: str):
     preposition = "во" if date.startswith("вторник") else "в"
-    weekdays = ["понедельник,", "вторник,", "среду,", "четверг,", "пятницу,", "субботу,", "воскресение,"]
+    weekdays = ["понедельник,", "вторник,", "среду,", "четверг,", "пятницу,", "субботу,", "воскресенье,"]
     weekday, day, month = date.split()
     for w in weekdays:
         if w[:3] == weekday[:3]:
