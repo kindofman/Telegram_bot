@@ -5,6 +5,7 @@ from databases import db_wrapper
 from common.time_utils import get_dates_ahead, is_date_button
 from common.utils import (
     create_inline_buttons,
+    make_Naya_happy,
     Admin,
     Player,
     DATE,
@@ -23,6 +24,8 @@ start_kb.row('Navigation Calendar', 'Dialog Calendar')
 
 
 async def enter_admin_menu(message: types.Message):
+    # await make_Naya_happy(message)
+
     await message.reply("Привет админам!", reply_markup=admin_markup)
     await Admin.main.set()
 
@@ -129,7 +132,8 @@ async def process_new_game_button(message: types.Message):
 
 async def process_players_button(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
-    await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
+    buttons = [[i] for i in existing_games] + [[CANCEL_BUTTON]]
+    await message.reply("..", reply_markup=types.ReplyKeyboardMarkup(buttons, resize_keyboard=True))
     await Admin.players.set()
 
 
@@ -253,7 +257,8 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     )
     dp.register_message_handler(
         return_to_admin_menu, lambda message: message.text == CANCEL_BUTTON, state=[
-            Admin.players_for_date, Admin.new_game, Admin.change_game_for_date],
+            Admin.players, Admin.players_for_date, Admin.new_game, Admin.change_game_for_date,
+        ],
     )
     dp.register_message_handler(
         register_player, lambda message: message.text == ADD_PLAYER_BUTTON, state=Admin.players_for_date,

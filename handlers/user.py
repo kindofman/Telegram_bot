@@ -110,11 +110,11 @@ async def process_mafia(message: types.Message):
 
 async def process_nearest_game(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
+    buttons = [[i] for i in existing_games] + [[CANCEL_BUTTON]]
     if existing_games:
         await message.reply(
-            "Выберите дату встречи.", reply_markup=types.ReplyKeyboardMarkup(
-                [[i] for i in existing_games], resize_keyboard=True,
-            )
+            "Выберите дату встречи.",
+            reply_markup=types.ReplyKeyboardMarkup(buttons, resize_keyboard=True)
         )
         await Player.select_date.set()
     else:
@@ -216,14 +216,16 @@ def register_user_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(
         cancel_registration,
         lambda message: message.text == CANCEL_BUTTON,
-        state=[Player.nickname, Player.nearest_game, Player.mafia, Player.board_games],
+        state=[Player.nickname, Player.nearest_game, Player.mafia, Player.board_games, Player.select_date],
     )
     dp.register_message_handler(process_name_stage, state=Player.nickname)
     dp.register_message_handler(process_mafia, lambda message: message.text == MAFIA_BUTTON, state=Player.start)
     dp.register_message_handler(
         process_nearest_game, lambda message: message.text == NEAREST_GAME_BUTTON, state=Player.start,
     )
-    dp.register_message_handler(get_next_game_info, state=Player.select_date)
+    dp.register_message_handler(
+        get_next_game_info, lambda message: message.text != CANCEL_BUTTON, state=Player.select_date,
+    )
     dp.register_message_handler(get_gestures, lambda message: message.text == GESTURES_BUTTON, state=Player.mafia)
     dp.register_message_handler(get_rules, lambda message: message.text == RULES_BUTTON, state=Player.mafia)
     dp.register_message_handler(start_voting, lambda message: message.text == VOTE_BUTTON, state=Player.mafia)
