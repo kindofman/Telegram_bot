@@ -24,7 +24,7 @@ start_kb.row('Navigation Calendar', 'Dialog Calendar')
 
 
 async def enter_admin_menu(message: types.Message):
-    # await make_Naya_happy(message)
+    await make_Naya_happy(message)
 
     await message.reply("Привет админам!", reply_markup=admin_markup)
     await Admin.main.set()
