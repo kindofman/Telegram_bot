@@ -1,5 +1,6 @@
 from loader import db, bot, redis
 from common.utils import Player, process_name, DATE, ADMIN
+from common.time_utils import sorted_dates
 from buttons import *
 from spy import deal_cards, PLAYERS_NUM
 from databases import db_wrapper
@@ -110,7 +111,7 @@ async def process_mafia(message: types.Message):
 
 async def process_nearest_game(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
-    buttons = [[i] for i in existing_games] + [[CANCEL_BUTTON]]
+    buttons = [[i] for i in sorted_dates(existing_games)] + [[CANCEL_BUTTON]]
     if existing_games:
         await message.reply(
             "Выберите дату встречи.",

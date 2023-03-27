@@ -34,3 +34,31 @@ def is_date_button(date: str) -> bool:
         return False
 
 
+def month_ru_to_eng(month):
+    mapping = {
+        "января": "january",
+        "февраля": "february",
+        "марта": "march",
+        "апреля": "april",
+        "мая": "may",
+        "июня": "june",
+        "июля": "july",
+        "августа": "august",
+        "сентября": "september",
+        "октября": "october",
+        "ноября": "november",
+        "декабря": "december",
+    }
+    return mapping[month]
+
+
+def normalize_date(date: str):
+    year = datetime.now().year
+    date = date.split(", ")[-1]
+    day, month = date.split()
+    date = datetime.strptime(f"{day} {month_ru_to_eng(month)}, {year}", "%d %B, %Y")
+    return date
+
+def sorted_dates(dates: List[str]) -> List[str]:
+    return sorted(dates, key=normalize_date)
+
