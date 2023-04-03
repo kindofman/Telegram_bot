@@ -5,7 +5,6 @@ from databases import db_wrapper
 from common.time_utils import get_dates_ahead, is_date_button
 from common.utils import (
     create_inline_buttons,
-    make_Naya_happy,
     Admin,
     Player,
     DATE,
@@ -15,6 +14,7 @@ from loader import db, redis, bot
 from buttons import *
 from aiogram import Dispatcher
 from spy import PLAYERS_NUM, deal_cards
+from naya import make_Naya_happy, make_Naya_happy_again
 
 
 DAYS_SHOW = 14
@@ -24,8 +24,6 @@ start_kb.row('Navigation Calendar', 'Dialog Calendar')
 
 
 async def enter_admin_menu(message: types.Message):
-#    await make_Naya_happy(message)
-
     await message.reply("Привет админам!", reply_markup=admin_markup)
     await Admin.main.set()
 
@@ -97,9 +95,15 @@ async def create_game(message: types.Message):
         right = right if right not in existing_games else EXISTS
         buttons.append([left])
         buttons[i].append(right)
+    buttons.append([CANCEL_BUTTON])
     markup = types.ReplyKeyboardMarkup(buttons)
     await message.reply(f"..", reply_markup=markup)
     await Admin.create_game.set()
+
+
+# async def return_to_games_creation(message: types.Message):
+#     await message.reply("..", reply_markup=new_game_markup)
+#     await Admin
 
 
 async def create_game_for_date(message: types.Message):
@@ -111,7 +115,8 @@ async def create_game_for_date(message: types.Message):
 async def change_game(message: types.Message):
     existing_games = await db_wrapper.get_all_games()
     if existing_games:
-        await message.reply("..", reply_markup=types.ReplyKeyboardMarkup([[i] for i in existing_games]))
+        buttons = [[i] for i in existing_games] + [[CANCEL_BUTTON]]
+        await message.reply("..", reply_markup=types.ReplyKeyboardMarkup(buttons))
         await Admin.change_game.set()
     else:
         await message.reply(f"Открытых игр нет.", reply_markup=new_game_markup)
@@ -119,6 +124,7 @@ async def change_game(message: types.Message):
 
 
 async def change_game_for_date(message: types.Message, state: FSMContext):
+    await make_Naya_happy_again(message)
     async with state.proxy() as data:
         data['date'] = message.text
     await message.reply(f"{message.text}", reply_markup=change_game_markup)
@@ -265,7 +271,9 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     )
     dp.register_message_handler(enter_player_nickname, state=Admin.register_player)
     dp.register_message_handler(
-        process_new_game_button, lambda message: message.text == NEW_GAME_BUTTON, state=Admin.main,
+        process_new_game_button,
+        lambda message: message.text in (NEW_GAME_BUTTON, CANCEL_BUTTON),
+        state=[Admin.main, Admin.create_game, Admin.change_game],
     )
     dp.register_message_handler(create_game, lambda message: message.text == CREATE_GAME_BUTTON, state=Admin.new_game)
     dp.register_message_handler(
