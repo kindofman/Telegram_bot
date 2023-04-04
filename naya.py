@@ -6,12 +6,13 @@ from random import choice, randint
 async def make_Naya_happy_again(message: types.Message):
     wait = 1
     img = _get_heart_stickers()
-    bot_message = await message.answer('<b>Пора бы запомнить, что я тебя люблю, сладкая 😘 </b>', parse_mode="HTML")
-    emojis = ["🙎‍♀️", "👩‍❤️‍💋‍👨", "💍", "👰‍♀️" , "🤵", "💒", "🤰", "🤱",  "👨‍👩‍👦", "👨‍👩‍👧‍👦"]
-    await sleep(2)
-    for e in emojis:
-        await bot_message.edit_text(e)
-        await sleep(wait)
+    bot_message = await message.answer('.')
+    # bot_message = await message.answer('<b>Пора бы запомнить, что я тебя люблю, сладкая 😘 </b>', parse_mode="HTML")
+    # emojis = ["🙎‍♀️", "👩‍❤️‍💋‍👨", "💍", "👰‍♀️" , "🤵", "💒", "🤰", "🤱",  "👨‍👩‍👦", "👨‍👩‍👧‍👦"]
+    # await sleep(2)
+    # for e in emojis:
+    #     await bot_message.edit_text(e)
+    #     await sleep(wait)
     for anim in img:
         await bot_message.edit_text('\n'.join(anim))
         await sleep(0.5)
